@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68", "wheel", "setuptools-scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ISOSIMpy"
+dynamic = ["version"]          # <— use version from git tag
+description = "Lumped parameter groundwater age simulations with a simple user interface - in Python"
+readme = "README.md"
+authors = [{ name = "Max G. Rudolph" }]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24",
+  "matplotlib>=3.7",
+  "scipy>=1.10",
+  "PyQt5>=5.15",
+]
+
+[project.urls]
+Homepage = "https://github.com/iGW-TU-Dresden/ISOSIMpy"
+Documentation = "https://iGW-TU-Dresden.github.io/ISOSIMpy/"
+
+[project.scripts]
+# console entry (shows console on Windows)
+ISOSIMpy = "ISOSIMpy.app:main"
+
+[project.gui-scripts]
+# GUI entry (no console on Windows)
+ISOSIMpy-gui = "ISOSIMpy.app:main"
+
+[project.optional-dependencies]
+dev = ["pytest", "pre-commit", "mkdocs-material", "mkdocstrings[python]"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+# defaults are fine; uncomment to tweak behavior:
+# tag_regex = r"^v(?P<version>\d+\.\d+\.\d+)$"
+# fallback_version = "0.0.0"
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+select = ["E", "F", "I"]
+line-length = 100
+
+[tool.pytest.ini_options]
+addopts = "-q"

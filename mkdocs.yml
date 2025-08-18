@@ -1,0 +1,13 @@
+site_name: ISOSIMpy
+repo_url: https://github.com/iGW-TU-Dresden/ISOSIMpy
+theme:
+  name: material
+  features:
+    - navigation.tabs
+plugins:
+  - search
+  - mkdocstrings
+nav:
+  - Home: index.md
+  - Usage: usage.md
+  - Developer Guide: dev.md
