@@ -251,7 +251,7 @@ class EPM_Unit:
         self.eta = eta
         self.parameters = [self.mtt, self.eta]
 
-        if bounds is not None:
+        if bounds is not None and self.bounds != []:
             self.bounds = list(bounds)
         else:
             [(0.0, 10000.0), (1.0, 5.0)]
@@ -295,7 +295,7 @@ class PM_Unit:
         self.mtt = mtt
         self.parameters = [self.mtt]
 
-        if bounds is not None:
+        if bounds is not None and self.bounds != []:
             self.bounds = list(bounds)
         else:
             [(0.0, 10000.0)]
