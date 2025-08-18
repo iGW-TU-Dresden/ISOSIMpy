@@ -251,7 +251,10 @@ class EPM_Unit:
         self.eta = eta
         self.parameters = [self.mtt, self.eta]
 
-        self.bounds = bounds
+        if bounds is not None:
+            self.bounds = list(bounds)
+        else:
+            [(0.0, 10000.0), (1.0, 5.0)]
 
     def set_params(self, mtt, eta):
         self.mtt = mtt
@@ -292,7 +295,10 @@ class PM_Unit:
         self.mtt = mtt
         self.parameters = [self.mtt]
 
-        self.bounds = bounds
+        if bounds is not None:
+            self.bounds = list(bounds)
+        else:
+            [(0.0, 10000.0)]
 
     def set_params(self, mtt):
         self.mtt = mtt
