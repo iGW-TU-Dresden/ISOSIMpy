@@ -30,7 +30,15 @@ ISOSIMpy = "ISOSIMpy.app:main"
 ISOSIMpy-gui = "ISOSIMpy.app:main"
 
 [project.optional-dependencies]
-dev = ["pytest", "pre-commit", "mkdocs-material", "mkdocstrings[python]"]
+dev = [
+  "pytest",
+  "pre-commit",
+  "black",
+  "ruff",
+  "pre-commit-hooks",
+  "mkdocs-material",
+  "mkdocstrings[python]",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
