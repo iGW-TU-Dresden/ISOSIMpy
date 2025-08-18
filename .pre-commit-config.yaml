@@ -1,15 +1,27 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
+  - repo: local
     hooks:
       - id: black
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.6
-    hooks:
+        name: black
+        entry: python -m black
+        language: system
+        types: [python]
+
       - id: ruff
-        args: ["--fix"]
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
-    hooks:
+        name: ruff
+        entry: python -m ruff check
+        language: system
+        args: [--fix]
+        types: [python]
+
       - id: end-of-file-fixer
+        name: end-of-file-fixer
+        entry: python -m pre_commit_hooks.end_of_file_fixer
+        language: system
+        types: [text]
+
       - id: trailing-whitespace
+        name: trailing-whitespace
+        entry: python -m pre_commit_hooks.trailing_whitespace_fixer
+        language: system
+        types: [text]

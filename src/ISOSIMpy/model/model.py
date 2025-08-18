@@ -1,14 +1,19 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy
 from scipy.optimize import differential_evolution
-import os
+
 
 ### define functions / model
 class Model:
     def __init__(
-            self, dt, lambda_, input_series, target_series, 
-            steady_state_input=None, n_warmup_half_lives=2):
+        self,
+        dt,
+        lambda_,
+        input_series,
+        target_series,
+        steady_state_input=None,
+        n_warmup_half_lives=2,
+    ):
         self.dt = dt
         self.lambda_ = lambda_
         self.input_series = input_series
@@ -63,16 +68,14 @@ class Model:
         # create warmup series
         warmup_series = np.ones(self.n_warmup) * self.steady_state_input
         # add warmup series to input series
-        self.input_series = np.concatenate(
-            (warmup_series, self.input_series))
-        
+        self.input_series = np.concatenate((warmup_series, self.input_series))
+
         if self.target_series is not None:
             # add nans to target series
             warmup_series[:] = np.nan
-            self.target_series = np.concatenate(
-                (warmup_series, self.target_series))
+            self.target_series = np.concatenate((warmup_series, self.target_series))
         return
-    
+
     def check_model(self):
         """
         Check if the model is valid.
@@ -87,21 +90,27 @@ class Model:
             pass
         else:
             raise ValueError("Problem with model warmup.")
-        
+
         # ckeck parameters
         if len(self.parameters) != len(self.fixed_parameters):
-            raise ValueError("Number of parameters does not match number" \
-            " of entries in fixed_parameters. {} != {}".format(
-                len(self.parameters), len(self.fixed_parameters)))
+            raise ValueError(
+                "Number of parameters does not match number"
+                " of entries in fixed_parameters. {} != {}".format(
+                    len(self.parameters), len(self.fixed_parameters)
+                )
+            )
 
         if len(self.parameters) != len(self.bounds):
-            raise ValueError("Number of parameters does not match number" \
-            " of entries in bounds. {} != {}. Note that parameters need" \
-            " bounds even if they are fixed.".format(
-                len(self.parameters), len(self.bounds)))
-        
-        if np.asarray(self.unit_fractions).sum() < .99 or \
-            np.asarray(self.unit_fractions).sum() > 1.01:
+            raise ValueError(
+                "Number of parameters does not match number"
+                " of entries in bounds. {} != {}. Note that parameters need"
+                " bounds even if they are fixed.".format(len(self.parameters), len(self.bounds))
+            )
+
+        if (
+            np.asarray(self.unit_fractions).sum() < 0.99
+            or np.asarray(self.unit_fractions).sum() > 1.01
+        ):
             raise ValueError("Sum of unit fractions does not equal 1.")
 
     def simulate(self, parameters):
@@ -131,7 +140,7 @@ class Model:
         t = np.arange(0, n * self.dt, self.dt)
 
         # get total number of units in model
-        n_units = len(self.units)
+        # n_units = len(self.units)
 
         # get empty target
         sim = np.zeros(n)
@@ -142,12 +151,13 @@ class Model:
             # get number of parameters
             n_params = len(unit.parameters)
             # set parameters
-            unit.set_params(*parameters[param_count:(param_count + n_params)])
+            unit.set_params(*parameters[param_count : (param_count + n_params)])
             # get impulse response
             impulse_response = unit.get_impulse_response(t, self.dt, self.lambda_)
             # convolution
-            contribution = scipy.signal.fftconvolve(
-                self.input_series, impulse_response)[:n] * self.dt
+            contribution = (
+                scipy.signal.fftconvolve(self.input_series, impulse_response)[:n] * self.dt
+            )
             # scale contribution by fraction
             contribution *= self.unit_fractions[num]
             # add to simulation
@@ -156,10 +166,10 @@ class Model:
             param_count += n_params
 
         # remove warmup period
-        sim = sim[self.n_warmup:]
+        sim = sim[self.n_warmup :]
 
         return sim
-    
+
     def handle_fixed_parameters(self, parameters):
         # handle fixed parameters
         # here we get a list of parameters which may miss some fixed
@@ -173,18 +183,17 @@ class Model:
         else:
             raise ValueError("Fixed parameters not set.")
         return parameters_
-    
+
     def objfunc(self, parameters):
         parameters_ = self.handle_fixed_parameters(parameters)
 
         sim = self.simulate(parameters_)
-        mask = ~np.isnan(self.target_series[self.n_warmup:]) & \
-            ~np.isnan(sim)
-        residuals = sim[mask] - self.target_series[self.n_warmup:][mask]
+        mask = ~np.isnan(self.target_series[self.n_warmup :]) & ~np.isnan(sim)
+        residuals = sim[mask] - self.target_series[self.n_warmup :][mask]
 
-        obj = np.mean(residuals ** 2)
+        obj = np.mean(residuals**2)
         return obj
-    
+
     def set_init_parameters(self, init_parameters):
         """
         Set the initial parameters of the model.
@@ -205,7 +214,7 @@ class Model:
     def solve(self):
         if self.target_series is None:
             raise ValueError("Target series not set.")
-        
+
         # handle bounds
         # just as parameters themselves we need to remove bounds from fixed
         # parameters so that they are not calibrated
@@ -221,7 +230,7 @@ class Model:
             popsize=100,
             mutation=(0.5, 1.99),
             recombination=0.5,
-            tol=1e-3
+            tol=1e-3,
         )
         parameters_opt = result.x
         # distribute / handle parameters, taking fixed parameters into
@@ -230,6 +239,7 @@ class Model:
         sim_opt = self.simulate(parameters_opt_)
 
         return parameters_opt_, sim_opt
+
 
 class EPM_Unit:
     def __init__(self, mtt, eta, bounds=None):
@@ -240,7 +250,7 @@ class EPM_Unit:
         # eta > 1 means exponential model with (eta - 1) part piston flow
         self.eta = eta
         self.parameters = [self.mtt, self.eta]
-        
+
         self.bounds = bounds
 
     def set_params(self, mtt, eta):
@@ -259,20 +269,23 @@ class EPM_Unit:
             Time step size
         lambda_ : float
             Decay constant
-        
+
         Returns
         -------
         h : h(t), the impulse response
         """
 
         # calculate response
-        h_prelim = (self.eta / self.mtt) * \
-            np.exp(-self.eta * tau / self.mtt + self.eta - 1) * \
-            np.exp(-lambda_ * tau)
-        h = np.where(tau < self.mtt * (1 - 1 / self.eta), 0., h_prelim)
-        
+        h_prelim = (
+            (self.eta / self.mtt)
+            * np.exp(-self.eta * tau / self.mtt + self.eta - 1)
+            * np.exp(-lambda_ * tau)
+        )
+        h = np.where(tau < self.mtt * (1 - 1 / self.eta), 0.0, h_prelim)
+
         return h
-    
+
+
 class PM_Unit:
     def __init__(self, mtt, bounds=None):
         # mean travel time
@@ -296,7 +309,7 @@ class PM_Unit:
             Time step size
         lambda_ : float
             Decay constant
-        
+
         Returns
         -------
         h : h(t), the impulse response
@@ -305,7 +318,7 @@ class PM_Unit:
         # we compute the combined IRF g(tau) = f(tau) * z(tau)
         # where f(tau) = delta(tau - t_m) and z(tau) = exp(-lambda tau).
         # discretely, delta is approximated as 1/dt at the nearest index.
-        
+
         h = np.zeros_like(tau)
         # find the index closest to t_m
         idx = int(round(self.mtt / dt))

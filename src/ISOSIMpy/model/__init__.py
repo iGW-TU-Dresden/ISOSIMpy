@@ -1,8 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy
-from scipy.optimize import differential_evolution
-import os
+# re-export public API from .model
+from .model import EPM_Unit as EPM_Unit
+from .model import Model as Model
+from .model import PM_Unit as PM_Unit
 
-# load module
-from .model import *
+__all__ = ["Model", "EPM_Unit", "PM_Unit"]

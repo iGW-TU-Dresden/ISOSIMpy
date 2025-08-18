@@ -47,8 +47,10 @@ where = ["src"]
 line-length = 100
 
 [tool.ruff]
-select = ["E", "F", "I"]
 line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
