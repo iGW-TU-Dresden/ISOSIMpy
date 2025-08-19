@@ -43,7 +43,53 @@ DEFAULTS = {
 
 
 class CalibrationApp(QWidget):
+    """
+    The main application window class.
+
+    Attributes
+    ----------
+    units_selected : dict
+        Dictionary of selected units.
+    unit_objects : list
+        List of unit objects.
+    param_entries : list
+        List of parameter values.
+    unit_fractions_entries : list
+        List of unit fractions entry widgets.
+    fixed_checkboxes : list
+        List of fixed checkbox widgets.
+    lower_bounds : list
+        List of lower bound values for all parameters.
+    upper_bounds : list
+        List of upper bound values for all parameters.
+    input_series : tuple
+        Input time series as a tuple of arrays of time steps / dates and
+        values.
+    target_series : tuple
+        Input time series as a tuple of arrays of time steps / dates and
+        values.
+    is_monthly : bool
+        Whether the input time series is monthly or yearly.
+    tracer : str
+        The tracer type. Currently ISOSIMpy supports Tritium and Carbon-14.
+    steady_state_input : float
+        Steady-state input as a single float.
+    n_warmup_half_lives : int
+        The number of half-lives to use for warmup.
+    """
+
     def __init__(self):
+        """
+        The main application window class initialization.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         super().__init__()
         self.setWindowTitle("ISOSIMpy App v2")
         self.units_selected = {}
@@ -63,6 +109,17 @@ class CalibrationApp(QWidget):
         self.initUI()
 
     def initUI(self):
+        """
+        Iintialize the user interface.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         layout = QVBoxLayout(self)
 
         self.tabs = QTabWidget()
@@ -87,6 +144,17 @@ class CalibrationApp(QWidget):
 
     ### TAB 0: File Input ###
     def init_file_input_tab(self):
+        """
+        Initialize the file input tab.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         layout = QVBoxLayout()
 
         # Radio buttons for frequency selection
@@ -137,15 +205,48 @@ class CalibrationApp(QWidget):
         self.file_input_tab.setLayout(layout)
 
     def update_frequency(self):
+        """
+        Update the model frequency (monthly or yearly).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         self.is_monthly = self.monthly_radio.isChecked()
 
     def update_tracer(self):
+        """
+        Update the tracer type (Tritium or Carbon-14).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         if self.tritium_radio.isChecked():
             self.tracer = "Tritium"
         elif self.carbon_radio.isChecked():
             self.tracer = "Carbon-14"
 
     def load_input_series(self):
+        """
+        Load input time series from a CSV file.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         file_name, _ = QFileDialog.getOpenFileName(
             self, "Open Input Series CSV", "", "CSV Files (*.csv)"
         )
@@ -166,6 +267,17 @@ class CalibrationApp(QWidget):
                 QMessageBox.critical(self, "Error", f"Failed to load input file:\n{str(e)}")
 
     def load_target_series(self):
+        """
+        Load target time series from a CSV file.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         file_name, _ = QFileDialog.getOpenFileName(
             self, "Open Target Series CSV", "", "CSV Files (*.csv)"
         )
@@ -187,6 +299,17 @@ class CalibrationApp(QWidget):
 
     ### TAB 1: Model Design ###
     def init_model_design_tab(self):
+        """
+        Initialize the model design tab.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         layout = QVBoxLayout()
 
         self.epm_box = QCheckBox("Include EPM Unit")
@@ -206,6 +329,17 @@ class CalibrationApp(QWidget):
 
     ### TAB 2: Parameter Assignment ###
     def init_parameters_tab(self):
+        """
+        Initialize the parameter assignment tab.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         self.param_layout = QGridLayout()
 
         self.param_container = QWidget()
@@ -221,6 +355,17 @@ class CalibrationApp(QWidget):
         self.parameters_tab.setLayout(layout)
 
     def update_parameters_tab(self):
+        """
+        Update the parameter assignment tab.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         # Clear layout and storage
         for i in reversed(range(self.param_layout.count())):
             widget = self.param_layout.itemAt(i).widget()
@@ -310,6 +455,17 @@ class CalibrationApp(QWidget):
 
     ### TAB 3: Calibration ###
     def init_calibration_tab(self):
+        """
+        Initialize the calibration tab.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         layout = QVBoxLayout()
 
         run_button = QPushButton("Run Simulation")
@@ -323,6 +479,19 @@ class CalibrationApp(QWidget):
         self.calibration_tab.setLayout(layout)
 
     def run_calibration(self, calibrate):
+        """
+        Run the calibration.
+
+        Parameters
+        ----------
+        calibrate : bool
+            Whether to run the calibration (True) or simple forward
+            simulation (False).
+
+        Returns
+        -------
+        None
+        """
         # check time series
         if not np.all(self.input_series[0] == self.target_series[0]):
             QMessageBox.critical(

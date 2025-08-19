@@ -5,6 +5,54 @@ from scipy.optimize import differential_evolution
 
 ### define functions / model
 class Model:
+    """
+    The model class.
+
+    Attributes
+    ----------
+    dt : float
+        The time step size. Note that the units corresponding to the
+        time step size must be consistent with all other time-dependent
+        parameters / units. Has dimension [T]
+    lambda_ : float
+        The decay constant with. Has dimension [1/T]
+    input_series : array_like
+        The input series. Can have arbitrary units, but must be
+        consistent with the target series units.
+    target_series : array_like
+        The target series. Can have arbitrary units, but must be
+        consistent with the input series units.
+    steady_state_input : array_like, optional
+        The steady-state input. Can have arbitrary units, but must be
+        consistent with the input and target series units. Defauls to
+        None.
+    n_warmup_half_lives : int, optional
+        The number of half-lives to use for warmup. Defaults to 2.
+    units : list
+        The list of model units (each item being an instance of a unit
+        class).
+    parameters : array_like
+        The current parameters of the model. With n_units units, the last
+        n_units parameters are the fractions of each unit. In the case of a
+        single unit, the last parameter is 1.
+    unit_fractions : array_like
+        The fractions of each unit in the model; see `parameters`.
+    fixed_parameters : array_like
+        The parameters that are fixed during calibration. Is a list of
+        bools (one for each parameter), where True indicates a fixed
+        parameter.
+    bounds : array_like
+        The bounds for the parameters. Consists of a tuple with the
+        structure (lower_bound, upper_bound) for each parameter, even if
+        the parameter is fixed.
+    initial_parameters : array_like
+        The initial parameters of the model; see `parameters`.
+    model_is_warm : bool
+        Whether the model has been warmed up or not.
+    n_warmup : int
+        The number of warmup time steps derived from `n_warmup_half_lives`.
+    """
+
     def __init__(
         self,
         dt,
@@ -14,6 +62,34 @@ class Model:
         steady_state_input=None,
         n_warmup_half_lives=2,
     ):
+        """
+        The model class initialization.
+
+        Parameters
+        ----------
+        dt : float
+            The time step size. Note that the units corresponding to the
+            time step size must be consistent with all other time-dependent
+            parameters / units. Has dimension [T]
+        lambda_ : float
+            The decay constant with. Has dimension [1/T]
+        input_series : array_like
+            The input series. Can have arbitrary units, but must be
+            consistent with the target series units.
+        target_series : array_like
+            The target series. Can have arbitrary units, but must be
+            consistent with the input series units.
+        steady_state_input : array_like, optional
+            The steady-state input. Can have arbitrary units, but must be
+            consistent with the input and target series units. Defauls to
+            None.
+        n_warmup_half_lives : int, optional
+            The number of half-lives to use for warmup. Defaults to 2.
+
+        Returns
+        -------
+        None
+        """
         self.dt = dt
         self.lambda_ = lambda_
         self.input_series = input_series
@@ -49,6 +125,12 @@ class Model:
         ----------
         unit : Unit
             The unit to add to the model.
+        fraction : float
+            The fraction of the unit in the model.
+
+        Returns
+        -------
+        None
         """
         self.units.append(unit)
         self.parameters.extend(unit.parameters)
@@ -58,6 +140,14 @@ class Model:
     def warmup(self):
         """
         Warm up the model.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         # add warmup period before input series (and target series)
         # define length of warmup period
@@ -78,7 +168,16 @@ class Model:
 
     def check_model(self):
         """
-        Check if the model is valid.
+        Check if the model is valid (check warmup, check parameters, check
+        unit fractions).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         # check warmup
         if not self.model_is_warm and self.steady_state_input is not None:
@@ -126,7 +225,7 @@ class Model:
 
         Returns
         -------
-        np.ndarray
+        sim : np.ndarray
             The simulated series.
         """
         self.parameters = np.array(parameters)
@@ -171,6 +270,22 @@ class Model:
         return sim
 
     def handle_fixed_parameters(self, parameters):
+        """
+        Handle fixed parameters. This is done to conform with the
+        differential evolution optimizer.
+
+        Parameters
+        ----------
+        parameters : list
+            The parameters to simulate the model with. With n_units units,
+            the last n_units parameters are the fractions of each unit. In
+            the case of 1 unit, the last parameter is 1.
+
+        Returns
+        -------
+        parameters_ : np.ndarray
+            The parameters with fixed parameters removed.
+        """
         # handle fixed parameters
         # here we get a list of parameters which may miss some fixed
         # parameters
@@ -185,6 +300,21 @@ class Model:
         return parameters_
 
     def objfunc(self, parameters):
+        """
+        Objective function (mean squared error) for calibration.
+
+        Parameters
+        ----------
+        parameters : list
+            The parameters to simulate the model with. With n_units units,
+            the last n_units parameters are the fractions of each unit. In
+            the case of 1 unit, the last parameter is 1.
+
+        Returns
+        -------
+        obj : float
+            The objective function value.
+        """
         parameters_ = self.handle_fixed_parameters(parameters)
 
         sim = self.simulate(parameters_)
@@ -204,14 +334,46 @@ class Model:
             The initial parameters of the model. With n_units units,
             the last n_units parameters are the fractions of each unit. In
             the case of 1 unit, the last parameter is 1.
+
+        Returns
+        -------
+        None
         """
         self.parameters = init_parameters
         self.initial_parameters = init_parameters
 
     def set_fixed_parameters(self, fixed_parameters):
+        """
+        Set the fixed parameters of the model.
+
+        Parameters
+        ----------
+        fixed_parameters : list
+            The parameters that are fixed during calibration. Is a list of
+            bools (one for each parameter), where True indicates a fixed
+            parameter.
+
+        Returns
+        -------
+        None
+        """
         self.fixed_parameters = np.array(fixed_parameters)
 
     def solve(self):
+        """
+        Solve (i.e., calibrate) the model.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        parameters_opt_ : np.ndarray
+            The optimized parameters.
+        sim_opt : np.ndarray
+            The simulation with optimized parameters (including warmup).
+        """
         if self.target_series is None:
             raise ValueError("Target series not set.")
 
@@ -242,7 +404,44 @@ class Model:
 
 
 class EPM_Unit:
+    """
+    Exponential piston flow model unit.
+
+    Attributes
+    ----------
+    mtt : float
+        Mean travel time.
+    eta : float
+        Ratio of total volume to volume of exponential model (>= 1).
+        eta = 1 means only exponential model, eta > 1 means exponential
+        model with (eta - 1) part piston flow.
+    parameters : list
+        List of parameters.
+    bounds : list
+        The bounds for the parameters. Consists of a tuple with the
+        structure (lower_bound, upper_bound) for each parameter.
+    """
+
     def __init__(self, mtt, eta, bounds=None):
+        """
+        The exponential piston flow model unit initialization.
+
+        Parameters
+        ----------
+        mtt : float
+            Mean travel time.
+        eta : float
+            Ratio of total volume to volume of exponential model (>= 1).
+            eta = 1 means only exponential model, eta > 1 means exponential
+            model with (eta - 1) part piston flow.
+        bounds : list
+            The bounds for the parameters. Consists of a tuple with the
+            structure (lower_bound, upper_bound) for each parameter.
+
+        Returns
+        -------
+        None
+        """
         # mean travel time
         self.mtt = mtt
         # ratio of total volume to volume of exponential model (>= 1)
@@ -257,6 +456,22 @@ class EPM_Unit:
             self.bounds = [(0.0, 10000.0), (1.0, 5.0)]
 
     def set_params(self, mtt, eta):
+        """
+        Set the parameters of the unit.
+
+        Parameters
+        ----------
+        mtt : float
+            Mean travel time.
+        eta : float
+            Ratio of total volume to volume of exponential model (>= 1).
+            eta = 1 means only exponential model, eta > 1 means exponential
+            model with (eta - 1) part piston flow.
+
+        Returns
+        -------
+        None
+        """
         self.mtt = mtt
         self.eta = eta
 
@@ -266,16 +481,17 @@ class EPM_Unit:
 
         Parameters
         ----------
-        t : np.ndarray
+        tau : np.ndarray
             1D array of time points
         dt : float
             Time step size
         lambda_ : float
-            Decay constant
+            Decay constant.
 
         Returns
         -------
-        h : h(t), the impulse response
+        h : np.ndarray
+            h(t), the impulse response as 1D array
         """
 
         # calculate response
@@ -290,7 +506,36 @@ class EPM_Unit:
 
 
 class PM_Unit:
+    """
+    Piston flow model unit.
+
+    Attributes
+    ----------
+    mtt : float
+        Mean travel time.
+    parameters : list
+        List of parameters.
+    bounds : list
+        The bounds for the parameters. Consists of a tuple with the
+        structure (lower_bound, upper_bound) for each parameter.
+    """
+
     def __init__(self, mtt, bounds=None):
+        """
+        The piston flow model unit initialization.
+
+        Parameters
+        ----------
+        mtt : float
+            Mean travel time.
+        bounds : list
+            The bounds for the parameters. Consists of a tuple with the
+            structure (lower_bound, upper_bound) for each parameter.
+
+        Returns
+        -------
+        None
+        """
         # mean travel time
         self.mtt = mtt
         self.parameters = [self.mtt]
@@ -301,6 +546,18 @@ class PM_Unit:
             self.bounds = [(0.0, 10000.0)]
 
     def set_params(self, mtt):
+        """
+        Set the parameters of the unit.
+
+        Parameters
+        ----------
+        mtt : float
+            Mean travel time.
+
+        Returns
+        -------
+        None
+        """
         self.mtt = mtt
 
     def get_impulse_response(self, tau, dt, lambda_):
@@ -309,16 +566,17 @@ class PM_Unit:
 
         Parameters
         ----------
-        t : np.ndarray
+        tau : np.ndarray
             1D array of time points
         dt : float
             Time step size
         lambda_ : float
-            Decay constant
+            Decay constant.
 
         Returns
         -------
-        h : h(t), the impulse response
+        h : np.ndarray
+            h(t), the impulse response as 1D array
         """
 
         # we compute the combined IRF g(tau) = f(tau) * z(tau)
