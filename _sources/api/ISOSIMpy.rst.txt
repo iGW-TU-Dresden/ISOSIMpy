@@ -1,0 +1,26 @@
+ISOSIMpy package
+================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   ISOSIMpy.model
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   ISOSIMpy.app
+
+Module contents
+---------------
+
+.. automodule:: ISOSIMpy
+   :members:
+   :show-inheritance:
+   :undoc-members:

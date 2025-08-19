@@ -1,0 +1,875 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="ISOSIMpy.app module" href="ISOSIMpy.app.html" /><link rel="prev" title="ISOSIMpy.model package" href="ISOSIMpy.model.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>ISOSIMpy.model.model module - ISOSIMpy documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">ISOSIMpy  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">ISOSIMpy  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev.html">Developer Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">ISOSIMpy</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of ISOSIMpy</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="ISOSIMpy.html">ISOSIMpy package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of ISOSIMpy package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current has-children"><a class="reference internal" href="ISOSIMpy.model.html">ISOSIMpy.model package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of ISOSIMpy.model package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ISOSIMpy.model.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ISOSIMpy.app.html">ISOSIMpy.app module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/ISOSIMpy.model.model.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-ISOSIMpy.model.model">
+<span id="isosimpy-model-model-module"></span><h1>ISOSIMpy.model.model module<a class="headerlink" href="#module-ISOSIMpy.model.model" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.EPM_Unit">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ISOSIMpy.model.model.</span></span><span class="sig-name descname"><span class="pre">EPM_Unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mtt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#EPM_Unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.EPM_Unit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Exponential piston flow model unit.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.EPM_Unit.mtt">
+<span class="sig-name descname"><span class="pre">mtt</span></span><a class="headerlink" href="#ISOSIMpy.model.model.EPM_Unit.mtt" title="Link to this definition">¶</a></dt>
+<dd><p>Mean travel time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.EPM_Unit.eta">
+<span class="sig-name descname"><span class="pre">eta</span></span><a class="headerlink" href="#ISOSIMpy.model.model.EPM_Unit.eta" title="Link to this definition">¶</a></dt>
+<dd><p>Ratio of total volume to volume of exponential model (&gt;= 1).
+eta = 1 means only exponential model, eta &gt; 1 means exponential
+model with (eta - 1) part piston flow.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.EPM_Unit.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#ISOSIMpy.model.model.EPM_Unit.parameters" title="Link to this definition">¶</a></dt>
+<dd><p>List of parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.EPM_Unit.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><a class="headerlink" href="#ISOSIMpy.model.model.EPM_Unit.bounds" title="Link to this definition">¶</a></dt>
+<dd><p>The bounds for the parameters. Consists of a tuple with the
+structure (lower_bound, upper_bound) for each parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.EPM_Unit.get_impulse_response">
+<span class="sig-name descname"><span class="pre">get_impulse_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#EPM_Unit.get_impulse_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.EPM_Unit.get_impulse_response" title="Link to this definition">¶</a></dt>
+<dd><p>Impulse response function for the EPM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tau</strong> (<em>np.ndarray</em>) – 1D array of time points</p></li>
+<li><p><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time step size</p></li>
+<li><p><strong>lambda</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Decay constant.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>h</strong> – h(t), the impulse response as 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.EPM_Unit.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mtt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#EPM_Unit.set_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.EPM_Unit.set_params" title="Link to this definition">¶</a></dt>
+<dd><p>Set the parameters of the unit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mtt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Mean travel time.</p></li>
+<li><p><strong>eta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Ratio of total volume to volume of exponential model (&gt;= 1).
+eta = 1 means only exponential model, eta &gt; 1 means exponential
+model with (eta - 1) part piston flow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ISOSIMpy.model.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steady_state_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_warmup_half_lives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The model class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.dt">
+<span class="sig-name descname"><span class="pre">dt</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.dt" title="Link to this definition">¶</a></dt>
+<dd><p>The time step size. Note that the units corresponding to the
+time step size must be consistent with all other time-dependent
+parameters / units. Has dimension [T]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.lambda_">
+<span class="sig-name descname"><span class="pre">lambda_</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.lambda_" title="Link to this definition">¶</a></dt>
+<dd><p>The decay constant with. Has dimension [1/T]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.input_series">
+<span class="sig-name descname"><span class="pre">input_series</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.input_series" title="Link to this definition">¶</a></dt>
+<dd><p>The input series. Can have arbitrary units, but must be
+consistent with the target series units.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.target_series">
+<span class="sig-name descname"><span class="pre">target_series</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.target_series" title="Link to this definition">¶</a></dt>
+<dd><p>The target series. Can have arbitrary units, but must be
+consistent with the input series units.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.steady_state_input">
+<span class="sig-name descname"><span class="pre">steady_state_input</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.steady_state_input" title="Link to this definition">¶</a></dt>
+<dd><p>The steady-state input. Can have arbitrary units, but must be
+consistent with the input and target series units. Defauls to
+None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.n_warmup_half_lives">
+<span class="sig-name descname"><span class="pre">n_warmup_half_lives</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.n_warmup_half_lives" title="Link to this definition">¶</a></dt>
+<dd><p>The number of half-lives to use for warmup. Defaults to 2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a>, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.units">
+<span class="sig-name descname"><span class="pre">units</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.units" title="Link to this definition">¶</a></dt>
+<dd><p>The list of model units (each item being an instance of a unit
+class).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.parameters" title="Link to this definition">¶</a></dt>
+<dd><p>The current parameters of the model. With n_units units, the last
+n_units parameters are the fractions of each unit. In the case of a
+single unit, the last parameter is 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.unit_fractions">
+<span class="sig-name descname"><span class="pre">unit_fractions</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.unit_fractions" title="Link to this definition">¶</a></dt>
+<dd><p>The fractions of each unit in the model; see <cite>parameters</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.fixed_parameters">
+<span class="sig-name descname"><span class="pre">fixed_parameters</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.fixed_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>The parameters that are fixed during calibration. Is a list of
+bools (one for each parameter), where True indicates a fixed
+parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.bounds" title="Link to this definition">¶</a></dt>
+<dd><p>The bounds for the parameters. Consists of a tuple with the
+structure (lower_bound, upper_bound) for each parameter, even if
+the parameter is fixed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.initial_parameters">
+<span class="sig-name descname"><span class="pre">initial_parameters</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.initial_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>The initial parameters of the model; see <cite>parameters</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.model_is_warm">
+<span class="sig-name descname"><span class="pre">model_is_warm</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.model_is_warm" title="Link to this definition">¶</a></dt>
+<dd><p>Whether the model has been warmed up or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.n_warmup">
+<span class="sig-name descname"><span class="pre">n_warmup</span></span><a class="headerlink" href="#ISOSIMpy.model.model.Model.n_warmup" title="Link to this definition">¶</a></dt>
+<dd><p>The number of warmup time steps derived from <cite>n_warmup_half_lives</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.add_unit">
+<span class="sig-name descname"><span class="pre">add_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model.add_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model.add_unit" title="Link to this definition">¶</a></dt>
+<dd><p>Add a unit to the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>unit</strong> (<em>Unit</em>) – The unit to add to the model.</p></li>
+<li><p><strong>fraction</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – The fraction of the unit in the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.check_model">
+<span class="sig-name descname"><span class="pre">check_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model.check_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model.check_model" title="Link to this definition">¶</a></dt>
+<dd><p>Check if the model is valid (check warmup, check parameters, check
+unit fractions).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>None</strong></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.handle_fixed_parameters">
+<span class="sig-name descname"><span class="pre">handle_fixed_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model.handle_fixed_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model.handle_fixed_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>Handle fixed parameters. This is done to conform with the
+differential evolution optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a>) – The parameters to simulate the model with. With n_units units,
+the last n_units parameters are the fractions of each unit. In
+the case of 1 unit, the last parameter is 1.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>parameters_</strong> – The parameters with fixed parameters removed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.objfunc">
+<span class="sig-name descname"><span class="pre">objfunc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model.objfunc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model.objfunc" title="Link to this definition">¶</a></dt>
+<dd><p>Objective function (mean squared error) for calibration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a>) – The parameters to simulate the model with. With n_units units,
+the last n_units parameters are the fractions of each unit. In
+the case of 1 unit, the last parameter is 1.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>obj</strong> – The objective function value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.set_fixed_parameters">
+<span class="sig-name descname"><span class="pre">set_fixed_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fixed_parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model.set_fixed_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model.set_fixed_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>Set the fixed parameters of the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fixed_parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a>) – The parameters that are fixed during calibration. Is a list of
+bools (one for each parameter), where True indicates a fixed
+parameter.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.set_init_parameters">
+<span class="sig-name descname"><span class="pre">set_init_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model.set_init_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model.set_init_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>Set the initial parameters of the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>init_parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a>) – The initial parameters of the model. With n_units units,
+the last n_units parameters are the fractions of each unit. In
+the case of 1 unit, the last parameter is 1.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.simulate">
+<span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model.simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model.simulate" title="Link to this definition">¶</a></dt>
+<dd><p>Simulate the model given parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a>) – The parameters to simulate the model with. With n_units units,
+the last n_units parameters are the fractions of each unit. In
+the case of 1 unit, the last parameter is 1.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sim</strong> – The simulated series.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model.solve" title="Link to this definition">¶</a></dt>
+<dd><p>Solve (i.e., calibrate) the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>None</strong></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>parameters_opt_</strong> (<em>np.ndarray</em>) – The optimized parameters.</p></li>
+<li><p><strong>sim_opt</strong> (<em>np.ndarray</em>) – The simulation with optimized parameters (including warmup).</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.Model.warmup">
+<span class="sig-name descname"><span class="pre">warmup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#Model.warmup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.Model.warmup" title="Link to this definition">¶</a></dt>
+<dd><p>Warm up the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>None</strong></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.PM_Unit">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ISOSIMpy.model.model.</span></span><span class="sig-name descname"><span class="pre">PM_Unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mtt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#PM_Unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.PM_Unit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Piston flow model unit.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.PM_Unit.mtt">
+<span class="sig-name descname"><span class="pre">mtt</span></span><a class="headerlink" href="#ISOSIMpy.model.model.PM_Unit.mtt" title="Link to this definition">¶</a></dt>
+<dd><p>Mean travel time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.PM_Unit.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#ISOSIMpy.model.model.PM_Unit.parameters" title="Link to this definition">¶</a></dt>
+<dd><p>List of parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.PM_Unit.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><a class="headerlink" href="#ISOSIMpy.model.model.PM_Unit.bounds" title="Link to this definition">¶</a></dt>
+<dd><p>The bounds for the parameters. Consists of a tuple with the
+structure (lower_bound, upper_bound) for each parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.PM_Unit.get_impulse_response">
+<span class="sig-name descname"><span class="pre">get_impulse_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#PM_Unit.get_impulse_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.PM_Unit.get_impulse_response" title="Link to this definition">¶</a></dt>
+<dd><p>Impulse response function for the EPM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tau</strong> (<em>np.ndarray</em>) – 1D array of time points</p></li>
+<li><p><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time step size</p></li>
+<li><p><strong>lambda</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Decay constant.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>h</strong> – h(t), the impulse response as 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ISOSIMpy.model.model.PM_Unit.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mtt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ISOSIMpy/model/model.html#PM_Unit.set_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.model.PM_Unit.set_params" title="Link to this definition">¶</a></dt>
+<dd><p>Set the parameters of the unit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mtt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Mean travel time.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="ISOSIMpy.app.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">ISOSIMpy.app module</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="ISOSIMpy.model.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ISOSIMpy.model package</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ISOSIMpy.model.model module</a><ul>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.EPM_Unit"><code class="docutils literal notranslate"><span class="pre">EPM_Unit</span></code></a><ul>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.EPM_Unit.mtt"><code class="docutils literal notranslate"><span class="pre">EPM_Unit.mtt</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.EPM_Unit.eta"><code class="docutils literal notranslate"><span class="pre">EPM_Unit.eta</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.EPM_Unit.parameters"><code class="docutils literal notranslate"><span class="pre">EPM_Unit.parameters</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.EPM_Unit.bounds"><code class="docutils literal notranslate"><span class="pre">EPM_Unit.bounds</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.EPM_Unit.get_impulse_response"><code class="docutils literal notranslate"><span class="pre">EPM_Unit.get_impulse_response()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.EPM_Unit.set_params"><code class="docutils literal notranslate"><span class="pre">EPM_Unit.set_params()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.dt"><code class="docutils literal notranslate"><span class="pre">Model.dt</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.lambda_"><code class="docutils literal notranslate"><span class="pre">Model.lambda_</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.input_series"><code class="docutils literal notranslate"><span class="pre">Model.input_series</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.target_series"><code class="docutils literal notranslate"><span class="pre">Model.target_series</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.steady_state_input"><code class="docutils literal notranslate"><span class="pre">Model.steady_state_input</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.n_warmup_half_lives"><code class="docutils literal notranslate"><span class="pre">Model.n_warmup_half_lives</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.units"><code class="docutils literal notranslate"><span class="pre">Model.units</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.parameters"><code class="docutils literal notranslate"><span class="pre">Model.parameters</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.unit_fractions"><code class="docutils literal notranslate"><span class="pre">Model.unit_fractions</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.fixed_parameters"><code class="docutils literal notranslate"><span class="pre">Model.fixed_parameters</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.bounds"><code class="docutils literal notranslate"><span class="pre">Model.bounds</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.initial_parameters"><code class="docutils literal notranslate"><span class="pre">Model.initial_parameters</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.model_is_warm"><code class="docutils literal notranslate"><span class="pre">Model.model_is_warm</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.n_warmup"><code class="docutils literal notranslate"><span class="pre">Model.n_warmup</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.add_unit"><code class="docutils literal notranslate"><span class="pre">Model.add_unit()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.check_model"><code class="docutils literal notranslate"><span class="pre">Model.check_model()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.handle_fixed_parameters"><code class="docutils literal notranslate"><span class="pre">Model.handle_fixed_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.objfunc"><code class="docutils literal notranslate"><span class="pre">Model.objfunc()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.set_fixed_parameters"><code class="docutils literal notranslate"><span class="pre">Model.set_fixed_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.set_init_parameters"><code class="docutils literal notranslate"><span class="pre">Model.set_init_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.simulate"><code class="docutils literal notranslate"><span class="pre">Model.simulate()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.solve"><code class="docutils literal notranslate"><span class="pre">Model.solve()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.Model.warmup"><code class="docutils literal notranslate"><span class="pre">Model.warmup()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.PM_Unit"><code class="docutils literal notranslate"><span class="pre">PM_Unit</span></code></a><ul>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.PM_Unit.mtt"><code class="docutils literal notranslate"><span class="pre">PM_Unit.mtt</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.PM_Unit.parameters"><code class="docutils literal notranslate"><span class="pre">PM_Unit.parameters</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.PM_Unit.bounds"><code class="docutils literal notranslate"><span class="pre">PM_Unit.bounds</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.PM_Unit.get_impulse_response"><code class="docutils literal notranslate"><span class="pre">PM_Unit.get_impulse_response()</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.model.PM_Unit.set_params"><code class="docutils literal notranslate"><span class="pre">PM_Unit.set_params()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
