@@ -552,6 +552,7 @@ class CalibrationApp(QWidget):
             )
             for num, unit_key in enumerate(selected_keys):
                 bounds = bounds_list[num]
+
                 if unit_key == "EPM":
                     new_unit = mm.EPM_Unit(0.0, 0.0, bounds=bounds)
                 elif unit_key == "PM":
