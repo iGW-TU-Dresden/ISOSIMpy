@@ -36,13 +36,7 @@ jobs:
           python -m pip install -U pip
           pip install pyinstaller .
       - name: Build EXE (one-file)
-        run: |
-          pyinstaller --noconfirm --onefile --windowed ^
-            --name ISOSIMpy ^
-            -p src ^
-            --hidden-import=scipy.signal ^
-            --hidden-import=scipy.optimize ^
-            src/ISOSIMpy/__main__.py
+        run: pyinstaller --noconfirm --onefile --windowed --name ISOSIMpy -p src --hidden-import=scipy.signal --hidden-import=scipy.optimize src/ISOSIMpy/__main__.py
       - name: (Optional) add tag to filename
         if: startsWith(github.ref, 'refs/tags/')
         shell: pwsh
