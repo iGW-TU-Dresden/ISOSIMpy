@@ -38,6 +38,10 @@ dev = [
   "pre-commit-hooks",
   "mkdocs-material",
   "mkdocstrings[python]",
+  "sphinx",
+  "furo",
+  "myst-parser",
+  "sphinx-autodoc-typehints"
 ]
 
 [tool.setuptools]

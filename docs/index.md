@@ -2,5 +2,15 @@
 
 A GUI for groundwater age simlations using lumped parameter models.
 
-- **Run**: `ISOSIMpy-gui`
-- **Model**: EPM + PM units mixed by fractions; solved with SciPy differential evolution.
+```{toctree}
+:maxdepth: 2
+:caption: Guides
+:hidden:
+
+usage
+dev
+
+:maxdepth: 2
+:caption: API Reference
+
+api/modules
