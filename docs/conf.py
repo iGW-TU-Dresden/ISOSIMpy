@@ -48,7 +48,7 @@ intersphinx_mapping = {
 # do not document re-exported names (prevents duplicate objects)
 autosummary_imported_members = False
 
-# disambiguate short type names in NumPy-style docstrings
+# Disambiguate short type names in NumPy-style docstrings
 napoleon_type_aliases = {
     "Unit": "ISOSIMpy.model.units.Unit",
     "Model": "ISOSIMpy.model.model.Model",

@@ -1,21 +1,33 @@
-from .model import Model
-from .solver import Solver
-from .units import EPMUnit, PMUnit, Unit
+# we intentionally omit the Solver class from __all__ to avoid trouble
+# with autodoc (through Solver we otherwise hava a duplication of Model)
+__all__ = ["Model", "Unit", "EPMUnit", "PMUnit"]
 
-# for docs
-# tell Sphinx that these objects "live" in their defining submodules,
-# even though we re-export them here
-# this prevents duplicate targets
-Model.__module__ = "ISOSIMpy.model.model"
-Solver.__module__ = "ISOSIMpy.model.solver"
-Unit.__module__ = "ISOSIMpy.model.units"
-EPMUnit.__module__ = "ISOSIMpy.model.units"
-PMUnit.__module__ = "ISOSIMpy.model.units"
 
-__all__ = [
-    "Model",
-    "Solver",
-    "Unit",
-    "EPMUnit",
-    "PMUnit",
-]
+def __getattr__(name):
+    # Lazy re-exports so runtime imports still work:
+    if name == "Solver":
+        from .solver import Solver
+
+        return Solver
+    if name == "Model":
+        from .model import Model
+
+        return Model
+    if name == "Unit":
+        from .units import Unit
+
+        return Unit
+    if name == "EPMUnit":
+        from .units import EPMUnit
+
+        return EPMUnit
+    if name == "PMUnit":
+        from .units import PMUnit
+
+        return PMUnit
+    raise AttributeError(name)
+
+
+def __dir__():
+    # Keep Solver out of dir() so autodoc doesn't list it at the package level
+    return sorted(__all__)
