@@ -18,11 +18,6 @@ class Solver:
     optimizer, and writes the best solution back to the registry (and thus the
     Units via write-through).
 
-    Attributes
-    ----------
-    model : :class:`~ISOSIMpy.model.model.Model`
-        The ISOSIMpy model to optimize.
-
     Notes
     -----
     - The objective is currently mean squared error against ``target_series``.
