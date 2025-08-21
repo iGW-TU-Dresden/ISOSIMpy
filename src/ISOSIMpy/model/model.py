@@ -42,6 +42,7 @@ class Model:
       parameters into the model's registry.
     - Bounds are **optimization bounds** only and can be provided at add time
       or later via :meth:`set_bounds`.
+
     """
 
     dt: float
@@ -61,9 +62,6 @@ class Model:
     _is_warm: bool = field(default=False, init=False, repr=False)
     _n_warmup: int = field(default=0, init=False, repr=False)
 
-    # ------------------------------------------------------------------
-    # Unit management + parameter registry
-    # ------------------------------------------------------------------
     def add_unit(
         self,
         unit: Unit,
@@ -75,7 +73,7 @@ class Model:
 
         Parameters
         ----------
-        unit : Unit
+        unit : :class:`~ISOSIMpy.model.units.Unit`
             The unit instance to add.
         fraction : float
             Mixture fraction of this unit in the overall response. Fractions
@@ -115,7 +113,6 @@ class Model:
                 "local_name": local_name,
             }
 
-    # ------------------------ Registry helpers ----------------------------
     def param_keys(self, free_only: bool = False) -> List[str]:
         """Return parameter keys in a stable order.
 
@@ -224,9 +221,6 @@ class Model:
             out.append(b)  # type: ignore[arg-type]
         return out
 
-    # ------------------------------------------------------------------
-    # Warmup + simulation
-    # ------------------------------------------------------------------
     @property
     def n_warmup(self) -> int:
         """Number of warmup steps prepended to the series."""
@@ -310,10 +304,11 @@ class Model:
         Notes
         -----
         - Parameters are grouped by their namespace prefix (e.g., ``"epm"`` in
-        keys like ``"epm.mtt"``).
+          keys like ``"epm.mtt"``).
         - If `target_series` is available, the report includes the mean squared
-        error (MSE) between the simulation and observations using overlapping,
-        non-NaN entries.
+          error (MSE) between the simulation and observations using overlapping,
+          non-NaN entries.
+
         """
         lines: list[str] = []
 

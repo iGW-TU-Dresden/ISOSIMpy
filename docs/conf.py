@@ -44,3 +44,13 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
 }
+
+# do not document re-exported names (prevents duplicate objects)
+autosummary_imported_members = False
+
+# disambiguate short type names in NumPy-style docstrings
+napoleon_type_aliases = {
+    "Unit": "ISOSIMpy.model.units.Unit",
+    "Model": "ISOSIMpy.model.model.Model",
+    "Solver": "ISOSIMpy.model.solver.Solver",
+}

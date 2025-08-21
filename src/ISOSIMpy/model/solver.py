@@ -11,7 +11,7 @@ from .model import Model
 
 @dataclass
 class Solver:
-    """Optimization wrapper for :class:`~ISOSIMpy.model.Model`.
+    """Optimization wrapper for :class:`~ISOSIMpy.model.model.Model`.
 
     The solver interacts **only** with the model's parameter registry. It
     constructs a free-parameter vector and corresponding bounds, runs a chosen
@@ -28,6 +28,7 @@ class Solver:
     - The objective is currently mean squared error against ``target_series``.
     - Parameters with ``fixed=True`` are excluded from optimization but their
       current values are honored in the simulation.
+
     """
 
     model: Model
