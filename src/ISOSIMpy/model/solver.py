@@ -20,7 +20,7 @@ class Solver:
 
     Attributes
     ----------
-    model : Model
+    model : :class:`~ISOSIMpy.model.model.Model`
         The ISOSIMpy model to optimize.
 
     Notes
