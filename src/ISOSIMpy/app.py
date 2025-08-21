@@ -26,14 +26,14 @@ from . import model as mm
 # define some default values
 DEFAULTS = {
     "EPM": {
-        "class": mm.EPM_Unit,
+        "class": mm.EPMUnit,
         "name": "EPM",
         "param_names": ["Mean Transit Time", "Eta"],
         "default_values": [120.0, 1.1],
         "bounds": [(0.0, 1000.0), (1.0, 2.0)],
     },
     "PM": {
-        "class": mm.PM_Unit,
+        "class": mm.PMUnit,
         "name": "PM",
         "param_names": ["Mean Transit Time"],
         "default_values": [240.0],
@@ -492,12 +492,35 @@ class CalibrationApp(QWidget):
         -------
         None
         """
-        # check time series
+        # Check time series
         if not np.all(self.input_series[0] == self.target_series[0]):
             QMessageBox.critical(
                 self, "Error", "Input and target series must have the same timestamps"
             )
         try:
+            # Define time step
+            if self.is_monthly:
+                dt = 1.0
+                # Define lambda
+                if self.tracer == "Tritium":
+                    lambda_ = 0.693 / (12.33 * 12.0)
+                elif self.tracer == "Carbon-14":
+                    lambda_ = 0.693 / (5700.0 * 12.0)
+            else:
+                dt = 12.0
+                # Define lambda
+                if self.tracer == "Tritium":
+                    lambda_ = 0.693 / (12.33)
+                elif self.tracer == "Carbon-14":
+                    lambda_ = 0.693 / (5700.0)
+
+            # Get time series and time stamps
+            times = self.input_series[0]
+            input_series = self.input_series[1]
+            target_series = self.target_series[1]
+
+            ### Set up model
+            # Get parameter values and fixed parameters
             params = [float(e.text()) for e in self.param_entries]
             fixed = [cb.isChecked() for cb in self.fixed_checkboxes]
 
@@ -508,40 +531,7 @@ class CalibrationApp(QWidget):
             if self.pm_box.isChecked():
                 selected_keys.append("PM")
 
-            bounds_list = []
-            param_counter = 0
-
-            for unit_key in selected_keys:
-                n_params = len(DEFAULTS[unit_key]["param_names"])
-                unit_bounds = []
-                for _ in range(n_params):
-                    lb = float(self.lower_bounds[param_counter].text())
-                    ub = float(self.upper_bounds[param_counter].text())
-                    unit_bounds.append((lb, ub))
-                    param_counter += 1
-                bounds_list.append(unit_bounds)
-
-            times = self.input_series[0]
-            input_series = self.input_series[1]
-            target_series = self.target_series[1]
-
-            # define time step
-            if self.is_monthly:
-                dt = 1.0
-                # define lambda
-                if self.tracer == "Tritium":
-                    lambda_ = 0.693 / (12.33 * 12.0)
-                elif self.tracer == "Carbon-14":
-                    lambda_ = 0.693 / (5700.0 * 12.0)
-            else:
-                dt = 12.0
-                # define lambda
-                if self.tracer == "Tritium":
-                    lambda_ = 0.693 / (12.33)
-                elif self.tracer == "Carbon-14":
-                    lambda_ = 0.693 / (5700.0)
-
-            # New model for calibration
+            # Initialize model
             ml = mm.Model(
                 dt,
                 lambda_,
@@ -550,24 +540,63 @@ class CalibrationApp(QWidget):
                 steady_state_input=float(self.steady_state_input.text()),
                 n_warmup_half_lives=int(self.n_warmup_half_lives.text()),
             )
-            for num, unit_key in enumerate(selected_keys):
-                bounds = bounds_list[num]
 
+            # Initialize bound list (bounds of all units and parameters)
+            bounds_list = []
+            param_counter = 0
+            for num, unit_key in enumerate(selected_keys):
+                n_params = len(DEFAULTS[unit_key]["param_names"])
+                unit_bounds = []
+                unit_params = []
+                unit_fixed = []
+                for _ in range(n_params):
+                    # Get bounds and initial value
+                    lb = float(self.lower_bounds[param_counter].text())
+                    ub = float(self.upper_bounds[param_counter].text())
+                    init_val = params[param_counter]
+                    fixed_param = fixed[param_counter]
+                    # Append to lists
+                    unit_params.append(init_val)
+                    unit_bounds.append((lb, ub))
+                    unit_fixed.append(fixed_param)
+                    # Increment counter
+                    param_counter += 1
+                # Add unit to model
                 if unit_key == "EPM":
-                    new_unit = mm.EPM_Unit(0.0, 0.0, bounds=bounds)
+                    new_unit = mm.EPMUnit(mtt=unit_params[0], eta=unit_params[1])
+                    ml.add_unit(
+                        unit=new_unit,
+                        fraction=float(self.unit_fractions_entries[num].text()),
+                        prefix="epm",
+                        bounds=unit_bounds,
+                    )
+                    ml.set_fixed("epm.mtt", unit_fixed[0])
+                    ml.set_fixed("epm.eta", unit_fixed[1])
                 elif unit_key == "PM":
-                    new_unit = mm.PM_Unit(0.0, bounds=bounds)
-                ml.add_unit(new_unit, float(self.unit_fractions_entries[num].text()))
-            ml.set_init_parameters(params)
-            ml.set_fixed_parameters(fixed)
+                    new_unit = mm.PMUnit(mtt=unit_params[0])
+                    ml.add_unit(
+                        unit=new_unit,
+                        fraction=float(self.unit_fractions_entries[num].text()),
+                        prefix="pm",
+                        bounds=unit_bounds,
+                    )
+                    ml.set_fixed("pm.mtt", unit_fixed[0])
+                # Add bounds to global list
+                bounds_list.append(unit_bounds)
+
+            # TODO
+            # make sure the simulate function works (parameters are not
+            # explicitly passed to the function anymore)
+            # the calibration works but an error is returned at the end
+            # (error code / message is "0")
+
+            # add solver
+            solver = mm.Solver(model=ml)
 
             if calibrate:
-                opt_params, opt_sim = ml.solve()
+                opt_params, opt_sim = solver.solve()
             else:
-                opt_sim = ml.simulate(parameters=params)
-
-            # compute mean squared error
-            mse = np.nanmean((opt_sim - target_series) ** 2)
+                opt_sim = ml.simulate()
 
             # Plotting
             fig, ax = plt.subplots(figsize=(8, 4))
@@ -582,26 +611,19 @@ class CalibrationApp(QWidget):
 
             # write to txt file
             if calibrate:
-                with open("opt_params.txt", "w") as f:
-                    f.write("Optimized Parameters:\n")
-                    pcount = 0
-                    for num, unit_key in enumerate(selected_keys):
-                        f.write(f"Unit {unit_key}:\n")
-                        for param_name in DEFAULTS[unit_key]["param_names"]:
-                            f.write(f"{param_name}: {opt_params[pcount]:.3f}\n")
-                            pcount += 1
-                        f.write(f"Unit fraction: {self.unit_fractions_entries[num].text()}\n")
-                        f.write("\n")
-                    f.write(f"Steady state input: {self.steady_state_input.text()}\n")
-                    f.write("\n")
-                    f.write(f"Mean Squared Error: {mse:.3f}\n")
-                    f.write("\n")
-                    f.write(f"Tracer: {self.tracer}\n")
-                    f.write(f"Monthly Model: {self.is_monthly}\n")
-                    f.write(
-                        "KEEP IN MIND THAT THE TRAVEL TIME IS GIVEN IN MONTHS "
-                        "IF THE MODEL IS MONTHLY\n"
-                    )
+                if self.is_monthly:
+                    frequency = "1 month"
+                else:
+                    frequency = "1 year"
+
+                _ = ml.write_report(
+                    filepath="report.txt",
+                    frequency=frequency,
+                    sim=opt_sim,
+                    title="Model Report",
+                    include_initials=True,
+                    include_bounds=True,
+                )
 
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))

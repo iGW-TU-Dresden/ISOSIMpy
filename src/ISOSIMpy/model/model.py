@@ -1,591 +1,381 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Sequence, Tuple
+
 import numpy as np
-import scipy
-from scipy.optimize import differential_evolution
+import scipy.signal
+
+from .units import Unit
+
+# Each registry record stores numeric state + metadata used by the solver.
+ParamRecord = Dict[str, object]
 
 
-### define functions / model
+@dataclass
 class Model:
-    """
-    The model class.
+    """Forward model container with a parameter registry.
 
-    Attributes
+    The model aggregates units, keeps their mixing fractions, and performs the
+    convolution-based simulation. It also manages an explicit parameter
+    registry that stores **current values**, **initial values**, **optimizer
+    bounds**, and **fixed flags** per parameter.
+
+    Parameters
     ----------
     dt : float
-        The time step size. Note that the units corresponding to the
-        time step size must be consistent with all other time-dependent
-        parameters / units. Has dimension [T]
+        Time step of the simulation (same units as ``mtt`` used by units).
     lambda_ : float
-        The decay constant with. Has dimension [1/T]
-    input_series : array_like
-        The input series. Can have arbitrary units, but must be
-        consistent with the target series units.
-    target_series : array_like
-        The target series. Can have arbitrary units, but must be
-        consistent with the input series units.
-    steady_state_input : array_like, optional
-        The steady-state input. Can have arbitrary units, but must be
-        consistent with the input and target series units. Defauls to
-        None.
+        Decay constant in 1/time units.
+    input_series : ndarray
+        Forcing time series (length ``N``).
+    target_series : ndarray, optional
+        Observed output series (length ``N``); used only for calibration loss.
+    steady_state_input : float, optional
+        If provided, a warmup of constant input is prepended.
     n_warmup_half_lives : int, optional
-        The number of half-lives to use for warmup. Defaults to 2.
-    units : list
-        The list of model units (each item being an instance of a unit
-        class).
-    parameters : array_like
-        The current parameters of the model. With n_units units, the last
-        n_units parameters are the fractions of each unit. In the case of a
-        single unit, the last parameter is 1.
-    unit_fractions : array_like
-        The fractions of each unit in the model; see `parameters`.
-    fixed_parameters : array_like
-        The parameters that are fixed during calibration. Is a list of
-        bools (one for each parameter), where True indicates a fixed
-        parameter.
-    bounds : array_like
-        The bounds for the parameters. Consists of a tuple with the
-        structure (lower_bound, upper_bound) for each parameter, even if
-        the parameter is fixed.
-    initial_parameters : array_like
-        The initial parameters of the model; see `parameters`.
-    model_is_warm : bool
-        Whether the model has been warmed up or not.
-    n_warmup : int
-        The number of warmup time steps derived from `n_warmup_half_lives`.
+        Heuristic warmup scaling in half-lives (kept for compatibility).
+
+    Notes
+    -----
+    - Units are added via :meth:`add_unit`. The method also registers unit
+      parameters into the model's registry.
+    - Bounds are **optimization bounds** only and can be provided at add time
+      or later via :meth:`set_bounds`.
     """
 
-    def __init__(
+    dt: float
+    lambda_: float
+    input_series: np.ndarray
+    target_series: Optional[np.ndarray] = None
+    steady_state_input: Optional[float] = None
+    n_warmup_half_lives: int = 2
+
+    units: List[Unit] = field(default_factory=list)
+    unit_fractions: List[float] = field(default_factory=list)
+
+    # Parameter registry: key -> record
+    params: Dict[str, ParamRecord] = field(default_factory=dict, init=False)
+
+    # Internal warmup state
+    _is_warm: bool = field(default=False, init=False, repr=False)
+    _n_warmup: int = field(default=0, init=False, repr=False)
+
+    # ------------------------------------------------------------------
+    # Unit management + parameter registry
+    # ------------------------------------------------------------------
+    def add_unit(
         self,
-        dt,
-        lambda_,
-        input_series,
-        target_series,
-        steady_state_input=None,
-        n_warmup_half_lives=2,
-    ):
-        """
-        The model class initialization.
-
-        Parameters
-        ----------
-        dt : float
-            The time step size. Note that the units corresponding to the
-            time step size must be consistent with all other time-dependent
-            parameters / units. Has dimension [T]
-        lambda_ : float
-            The decay constant with. Has dimension [1/T]
-        input_series : array_like
-            The input series. Can have arbitrary units, but must be
-            consistent with the target series units.
-        target_series : array_like
-            The target series. Can have arbitrary units, but must be
-            consistent with the input series units.
-        steady_state_input : array_like, optional
-            The steady-state input. Can have arbitrary units, but must be
-            consistent with the input and target series units. Defauls to
-            None.
-        n_warmup_half_lives : int, optional
-            The number of half-lives to use for warmup. Defaults to 2.
-
-        Returns
-        -------
-        None
-        """
-        self.dt = dt
-        self.lambda_ = lambda_
-        self.input_series = input_series
-        self.target_series = target_series
-        self.steady_state_input = steady_state_input
-        self.n_warmup_half_lives = n_warmup_half_lives
-
-        # list of units
-        self.units = []
-        # parameters of n individual units
-        # last n parameters are fractions of individual units
-        self.parameters = []
-        # list of unit fractions
-        self.unit_fractions = []
-        # fixed parameters
-        # list of bools; True if fixed, False if free
-        # does not include the unit fractions
-        self.fixed_parameters = None
-        # bounds, does not include the unit fractions
-        self.bounds = []
-        # initial parameters
-        self.initial_parameters = None
-        # warmup trigger
-        self.model_is_warm = False
-        # warmup steps
-        self.n_warmup = 0
-
-    def add_unit(self, unit, fraction):
-        """
-        Add a unit to the model.
+        unit: Unit,
+        fraction: float,
+        prefix: Optional[str] = None,
+        bounds: Optional[List[Tuple[float, float]]] = None,
+    ) -> None:
+        """Add a unit, register its parameters, and set its mixture fraction.
 
         Parameters
         ----------
         unit : Unit
-            The unit to add to the model.
+            The unit instance to add.
         fraction : float
-            The fraction of the unit in the model.
+            Mixture fraction of this unit in the overall response. Fractions
+            should sum to ~1 across all units.
+        prefix : str, optional
+            Namespace prefix for the unit's parameters (e.g., ``"epm"``). If
+            omitted, ``"u{index}"`` is used in insertion order.
+        bounds : list of (float, float), optional
+            Optimizer bounds for the unit's parameters in the same order as
+            returned by ``unit.param_values()``. If omitted, bounds are left
+            as ``None`` and can be supplied later via :meth:`set_bounds`.
 
-        Returns
-        -------
-        None
+        Raises
+        ------
+        ValueError
+            If ``bounds`` is provided and its length does not match the number
+            of unit parameters.
         """
+        idx = len(self.units)
         self.units.append(unit)
-        self.parameters.extend(unit.parameters)
-        self.bounds.extend(unit.bounds)
-        self.unit_fractions.append(fraction)
+        self.unit_fractions.append(float(fraction))
 
-    def warmup(self):
-        """
-        Warm up the model.
+        prefix = prefix or f"u{idx}"
+        local_params = list(unit.param_values().items())
+        if bounds is not None and len(bounds) != len(local_params):
+            raise ValueError("Length of bounds list must match number of unit parameters")
+
+        for i, (local_name, val) in enumerate(local_params):
+            key = f"{prefix}.{local_name}"
+            b = bounds[i] if bounds is not None else None
+            self.params[key] = {
+                "value": float(val),
+                "initial": float(val),
+                "bounds": b,
+                "fixed": False,
+                "unit_index": idx,
+                "local_name": local_name,
+            }
+
+    # ------------------------ Registry helpers ----------------------------
+    def param_keys(self, free_only: bool = False) -> List[str]:
+        """Return parameter keys in a stable order.
 
         Parameters
         ----------
-        None
+        free_only : bool, optional
+            If ``True``, return only parameters with ``fixed == False``.
 
         Returns
         -------
-        None
+        list of str
+            Fully-qualified parameter keys (e.g., ``"epm.mtt"``).
         """
-        # add warmup period before input series (and target series)
-        # define length of warmup period
-        # get half life
+        items = sorted(
+            self.params.items(), key=lambda kv: (kv[1]["unit_index"], kv[1]["local_name"])  # type: ignore
+        )
+        return [k for k, rec in items if not (free_only and rec.get("fixed"))]
+
+    def get_vector(self, which: str = "value", free_only: bool = False) -> List[float]:
+        """Export parameter values as a flat vector in registry order.
+
+        Parameters
+        ----------
+        which : {"value", "initial"}
+            Whether to export current values or initial guesses.
+        free_only : bool, optional
+            If ``True``, export only free parameters.
+
+        Returns
+        -------
+        list of float
+            Parameter vector following :meth:`param_keys` order.
+        """
+        assert which in {"value", "initial"}
+        keys = self.param_keys(free_only=free_only)
+        return [float(self.params[k][which]) for k in keys]
+
+    def set_vector(
+        self, vec: Sequence[float], which: str = "value", free_only: bool = False
+    ) -> None:
+        """Write a vector into the registry (and units) in registry order.
+
+        Parameters
+        ----------
+        vec : sequence of float
+            Values to assign (length must match the number of addressed params).
+        which : {"value", "initial"}
+            Destination field to write (``"value"`` also writes through to units).
+        free_only : bool, optional
+            If ``True``, write into free parameters only.
+        """
+        assert which in {"value", "initial"}
+        keys = self.param_keys(free_only=free_only)
+        it = iter(map(float, vec))
+        for k in keys:
+            v = next(it)
+            self.params[k][which] = v
+            if which == "value":
+                # push through to owning unit immediately
+                idx = int(self.params[k]["unit_index"])  # type: ignore
+                local = str(self.params[k]["local_name"])  # type: ignore
+                self.units[idx].set_param_values({local: v})
+
+    def set_param(self, key: str, value: float) -> None:
+        """Set a single parameter's **current** value and update the unit.
+
+        This is a convenience wrapper around :meth:`set_vector` for one value.
+        """
+        self.params[key]["value"] = float(value)
+        idx = int(self.params[key]["unit_index"])  # type: ignore
+        local = str(self.params[key]["local_name"])  # type: ignore
+        self.units[idx].set_param_values({local: float(value)})
+
+    def set_initial(self, key: str, value: float) -> None:
+        """Set a single parameter's **initial** value used for optimization seeding."""
+        self.params[key]["initial"] = float(value)
+
+    def set_bounds(self, key: str, bounds: Tuple[float, float]) -> None:
+        """Set optimizer bounds for a single parameter.
+
+        Parameters
+        ----------
+        key : str
+            Fully-qualified parameter key (e.g., ``"epm.mtt"``).
+        bounds : (float, float)
+            Lower and upper search bounds for the optimizer.
+        """
+        lo, hi = bounds
+        self.params[key]["bounds"] = (float(lo), float(hi))
+
+    def set_fixed(self, key: str, fixed: bool = True) -> None:
+        """Mark a parameter as fixed (not optimized)."""
+        self.params[key]["fixed"] = bool(fixed)
+
+    def get_bounds(self, free_only: bool = False) -> List[Tuple[float, float]]:
+        """Return bounds for parameters in registry order.
+
+        Raises a ``ValueError`` if any addressed parameter has no bounds set.
+        """
+        keys = self.param_keys(free_only=free_only)
+        out: List[Tuple[float, float]] = []
+        for k in keys:
+            b = self.params[k]["bounds"]
+            if b is None:
+                raise ValueError(f"Missing optimizer bounds for parameter: {k}")
+            out.append(b)  # type: ignore[arg-type]
+        return out
+
+    # ------------------------------------------------------------------
+    # Warmup + simulation
+    # ------------------------------------------------------------------
+    @property
+    def n_warmup(self) -> int:
+        """Number of warmup steps prepended to the series."""
+        return self._n_warmup
+
+    def _warmup(self) -> None:
         t12 = 0.693 / self.lambda_
-        # set warmup to approx. 5 half lives
-        self.n_warmup = int(t12) * 10
-        # create warmup series
-        warmup_series = np.ones(self.n_warmup) * self.steady_state_input
-        # add warmup series to input series
-        self.input_series = np.concatenate((warmup_series, self.input_series))
-
+        self._n_warmup = int(t12) * self.n_warmup_half_lives
+        if self.steady_state_input is None or self._n_warmup <= 0:
+            # no warmup requested → ensure we don't slice anything off
+            self._n_warmup = 0
+            self._is_warm = True
+            return
+        warm = np.full(self._n_warmup, float(self.steady_state_input))
+        self.input_series = np.concatenate((warm, self.input_series))
         if self.target_series is not None:
-            # add nans to target series
-            warmup_series[:] = np.nan
-            self.target_series = np.concatenate((warmup_series, self.target_series))
-        return
+            warm_nan = np.full(self._n_warmup, np.nan)
+            self.target_series = np.concatenate((warm_nan, self.target_series))
+        self._is_warm = True
 
-    def check_model(self):
-        """
-        Check if the model is valid (check warmup, check parameters, check
-        unit fractions).
+    def _check(self) -> None:
+        if not self._is_warm:
+            self._warmup()
+        s = sum(self.unit_fractions) if self.unit_fractions else 0.0
+        if not (0.99 <= s <= 1.01):
+            raise ValueError("Sum of unit fractions must be ~1.0.")
 
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
-        """
-        # check warmup
-        if not self.model_is_warm and self.steady_state_input is not None:
-            self.warmup()
-            self.model_is_warm = True
-        elif not self.model_is_warm and self.steady_state_input is None:
-            self.model_is_warm = True
-        elif self.model_is_warm:
-            pass
-        else:
-            raise ValueError("Problem with model warmup.")
-
-        # ckeck parameters
-        if len(self.parameters) != len(self.fixed_parameters):
-            raise ValueError(
-                "Number of parameters does not match number"
-                " of entries in fixed_parameters. {} != {}".format(
-                    len(self.parameters), len(self.fixed_parameters)
-                )
-            )
-
-        if len(self.parameters) != len(self.bounds):
-            raise ValueError(
-                "Number of parameters does not match number"
-                " of entries in bounds. {} != {}. Note that parameters need"
-                " bounds even if they are fixed.".format(len(self.parameters), len(self.bounds))
-            )
-
-        if (
-            np.asarray(self.unit_fractions).sum() < 0.99
-            or np.asarray(self.unit_fractions).sum() > 1.01
-        ):
-            raise ValueError("Sum of unit fractions does not equal 1.")
-
-    def simulate(self, parameters):
-        """
-        Simulate the model given parameters
-
-        Parameters
-        ----------
-        parameters : list
-            The parameters to simulate the model with. With n_units units,
-            the last n_units parameters are the fractions of each unit. In
-            the case of 1 unit, the last parameter is 1.
+    def simulate(self) -> np.ndarray:
+        """Run the forward model using current registry values.
 
         Returns
         -------
-        sim : np.ndarray
-            The simulated series.
+        ndarray
+            Simulated output aligned with ``target_series`` (warmup removed).
         """
-        self.parameters = np.array(parameters)
-
-        # check model
-        self.check_model()
-
-        # create series of time steps
-        # this includes the optional warmup
+        self._check()
         n = len(self.input_series)
-        t = np.arange(0, n * self.dt, self.dt)
-
-        # get total number of units in model
-        # n_units = len(self.units)
-
-        # get empty target
+        t = np.arange(0.0, n * self.dt, self.dt)
         sim = np.zeros(n)
+        for frac, unit in zip(self.unit_fractions, self.units):
+            h = unit.get_impulse_response(t, self.dt, self.lambda_)
+            contrib = scipy.signal.fftconvolve(self.input_series, h)[:n] * self.dt
+            sim += frac * contrib
+        return sim[self._n_warmup :]
 
-        # iterate over units and simulate
-        param_count = 0
-        for num, unit in enumerate(self.units):
-            # get number of parameters
-            n_params = len(unit.parameters)
-            # set parameters
-            unit.set_params(*parameters[param_count : (param_count + n_params)])
-            # get impulse response
-            impulse_response = unit.get_impulse_response(t, self.dt, self.lambda_)
-            # convolution
-            contribution = (
-                scipy.signal.fftconvolve(self.input_series, impulse_response)[:n] * self.dt
-            )
-            # scale contribution by fraction
-            contribution *= self.unit_fractions[num]
-            # add to simulation
-            sim += contribution
-            # update parameter count
-            param_count += n_params
-
-        # remove warmup period
-        sim = sim[self.n_warmup :]
-
-        return sim
-
-    def handle_fixed_parameters(self, parameters):
+    def write_report(
+        self,
+        filepath: str,
+        frequency: str,
+        sim: Optional[np.ndarray] = None,
+        title: str = "Model Report",
+        include_initials: bool = True,
+        include_bounds: bool = True,
+    ) -> str:
         """
-        Handle fixed parameters. This is done to conform with the
-        differential evolution optimizer.
+        Create a simple text report of the current model configuration and fit.
 
         Parameters
         ----------
-        parameters : list
-            The parameters to simulate the model with. With n_units units,
-            the last n_units parameters are the fractions of each unit. In
-            the case of 1 unit, the last parameter is 1.
+        filepath : str
+            Path of the text file to write.
+        frequency : str
+            Simulation frequency (e.g., ``"1h"``). This is not checked
+            internally and directly written to the report.
+        sim : ndarray, optional
+            Simulated series corresponding to the *current* parameters. If not
+            provided and `target_series` is present, the method will call
+            :meth:`simulate` to compute one.
+        title : str, optional
+            Title shown at the top of the report.
+        include_initials : bool, optional
+            Whether to include initial values in the parameter table.
+        include_bounds : bool, optional
+            Whether to include optimizer bounds in the parameter table.
 
         Returns
         -------
-        parameters_ : np.ndarray
-            The parameters with fixed parameters removed.
+        str
+            The full report text that was written to `filepath`.
+
+        Notes
+        -----
+        - Parameters are grouped by their namespace prefix (e.g., ``"epm"`` in
+        keys like ``"epm.mtt"``).
+        - If `target_series` is available, the report includes the mean squared
+        error (MSE) between the simulation and observations using overlapping,
+        non-NaN entries.
         """
-        # handle fixed parameters
-        # here we get a list of parameters which may miss some fixed
-        # parameters
-        # get initial parameters which include free and fixed parameters
-        # free parameters may be wrong but fixed parameters remain at
-        # initial values
-        if self.fixed_parameters is not None:
-            parameters_ = np.array(self.initial_parameters.copy())
-            parameters_[~self.fixed_parameters] = parameters
-        else:
-            raise ValueError("Fixed parameters not set.")
-        return parameters_
+        lines: list[str] = []
 
-    def objfunc(self, parameters):
-        """
-        Objective function (mean squared error) for calibration.
+        # Header
+        lines.append(f"{title}")
+        lines.append("=" * max(len(title), 20))
+        lines.append("")
 
-        Parameters
-        ----------
-        parameters : list
-            The parameters to simulate the model with. With n_units units,
-            the last n_units parameters are the fractions of each unit. In
-            the case of 1 unit, the last parameter is 1.
+        # Model settings
+        lines.append("Model settings")
+        lines.append("--------------")
+        lines.append(f"Time step (dt):          {frequency}")
+        lines.append(f"Decay constant (lambda): {self.lambda_}")
+        lines.append(f"Warmup steps:            {self._n_warmup} (auto)")
+        lines.append(f"Units count:             {len(self.units)}")
+        lines.append("")
 
-        Returns
-        -------
-        obj : float
-            The objective function value.
-        """
-        parameters_ = self.handle_fixed_parameters(parameters)
+        # MSE if possible
+        mse_text = "n/a"
+        if self.target_series is not None:
+            if sim is None:
+                sim = self.simulate()
+            y = self.target_series[self._n_warmup :]
+            if y is not None and sim is not None and len(y) == len(sim):
+                mask = ~np.isnan(y) & ~np.isnan(sim)
+                if np.any(mask):
+                    mse = float(np.mean((sim[mask] - y[mask]) ** 2))
+                    mse_text = f"{mse:.6g}"
+        lines.append("Global fit")
+        lines.append("----------")
+        lines.append(f"MSE: {mse_text}")
+        lines.append("")
 
-        sim = self.simulate(parameters_)
-        mask = ~np.isnan(self.target_series[self.n_warmup :]) & ~np.isnan(sim)
-        residuals = sim[mask] - self.target_series[self.n_warmup :][mask]
+        # Parameter table grouped by unit prefix
+        lines.append("Parameters by unit")
+        lines.append("------------------")
+        grouped: dict[str, list[str]] = {}
+        for key in self.param_keys(free_only=False):
+            prefix = key.split(".", 1)[0] if "." in key else "(root)"
+            grouped.setdefault(prefix, []).append(key)
 
-        obj = np.mean(residuals**2)
-        return obj
+        # pretty print per group
+        for idx, prefix in enumerate(sorted(grouped.keys())):
+            frac = self.unit_fractions[idx] if idx < len(self.unit_fractions) else None
+            frac_str = f"fraction={frac:.3f}" if frac is not None else ""
+            lines.append(f"[{prefix}] {frac_str}")
+            keys = sorted(grouped[prefix], key=lambda k: self.params[k]["local_name"])  # type: ignore
+            for k in keys:
+                rec = self.params[k]
+                val = float(rec["value"])
+                fixed = bool(rec.get("fixed", False))
+                row = f"  {k:15s} value={val:.6g}"
+                if include_initials:
+                    row += f", initial={float(rec['initial']):.6g}"
+                if include_bounds and rec.get("bounds") is not None:
+                    lo, hi = rec["bounds"]  # type: ignore
+                    row += f", bounds=({float(lo):.6g}, {float(hi):.6g})"
+                row += f", fixed={fixed}"
+                lines.append(row)
+            lines.append("")
 
-    def set_init_parameters(self, init_parameters):
-        """
-        Set the initial parameters of the model.
-
-        Parameters
-        ----------
-        init_parameters : list
-            The initial parameters of the model. With n_units units,
-            the last n_units parameters are the fractions of each unit. In
-            the case of 1 unit, the last parameter is 1.
-
-        Returns
-        -------
-        None
-        """
-        self.parameters = init_parameters
-        self.initial_parameters = init_parameters
-
-    def set_fixed_parameters(self, fixed_parameters):
-        """
-        Set the fixed parameters of the model.
-
-        Parameters
-        ----------
-        fixed_parameters : list
-            The parameters that are fixed during calibration. Is a list of
-            bools (one for each parameter), where True indicates a fixed
-            parameter.
-
-        Returns
-        -------
-        None
-        """
-        self.fixed_parameters = np.array(fixed_parameters)
-
-    def solve(self):
-        """
-        Solve (i.e., calibrate) the model.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        parameters_opt_ : np.ndarray
-            The optimized parameters.
-        sim_opt : np.ndarray
-            The simulation with optimized parameters (including warmup).
-        """
-        if self.target_series is None:
-            raise ValueError("Target series not set.")
-
-        # handle bounds
-        # just as parameters themselves we need to remove bounds from fixed
-        # parameters so that they are not calibrated
-        if self.fixed_parameters is not None:
-            bounds_ = [b for b, cond in zip(self.bounds, self.fixed_parameters) if not cond]
-        else:
-            bounds_ = self.bounds
-
-        result = differential_evolution(
-            self.objfunc,
-            bounds=bounds_,
-            maxiter=10000,
-            popsize=100,
-            mutation=(0.5, 1.99),
-            recombination=0.5,
-            tol=1e-3,
-        )
-        parameters_opt = result.x
-        # distribute / handle parameters, taking fixed parameters into
-        # account
-        parameters_opt_ = self.handle_fixed_parameters(parameters_opt)
-        sim_opt = self.simulate(parameters_opt_)
-
-        return parameters_opt_, sim_opt
-
-
-class EPM_Unit:
-    """
-    Exponential piston flow model unit.
-
-    Attributes
-    ----------
-    mtt : float
-        Mean travel time.
-    eta : float
-        Ratio of total volume to volume of exponential model (>= 1).
-        eta = 1 means only exponential model, eta > 1 means exponential
-        model with (eta - 1) part piston flow.
-    parameters : list
-        List of parameters.
-    bounds : list
-        The bounds for the parameters. Consists of a tuple with the
-        structure (lower_bound, upper_bound) for each parameter.
-    """
-
-    def __init__(self, mtt, eta, bounds=None):
-        """
-        The exponential piston flow model unit initialization.
-
-        Parameters
-        ----------
-        mtt : float
-            Mean travel time.
-        eta : float
-            Ratio of total volume to volume of exponential model (>= 1).
-            eta = 1 means only exponential model, eta > 1 means exponential
-            model with (eta - 1) part piston flow.
-        bounds : list
-            The bounds for the parameters. Consists of a tuple with the
-            structure (lower_bound, upper_bound) for each parameter.
-
-        Returns
-        -------
-        None
-        """
-        # mean travel time
-        self.mtt = mtt
-        # ratio of total volume to volume of exponential model (>= 1)
-        # eta = 1 means only exponential model
-        # eta > 1 means exponential model with (eta - 1) part piston flow
-        self.eta = eta
-        self.parameters = [self.mtt, self.eta]
-
-        if bounds is not None:
-            self.bounds = list(bounds)
-        else:
-            self.bounds = [(0.0, 10000.0), (1.0, 5.0)]
-
-    def set_params(self, mtt, eta):
-        """
-        Set the parameters of the unit.
-
-        Parameters
-        ----------
-        mtt : float
-            Mean travel time.
-        eta : float
-            Ratio of total volume to volume of exponential model (>= 1).
-            eta = 1 means only exponential model, eta > 1 means exponential
-            model with (eta - 1) part piston flow.
-
-        Returns
-        -------
-        None
-        """
-        self.mtt = mtt
-        self.eta = eta
-
-    def get_impulse_response(self, tau, dt, lambda_):
-        """
-        Impulse response function for the EPM.
-
-        Parameters
-        ----------
-        tau : np.ndarray
-            1D array of time points
-        dt : float
-            Time step size
-        lambda_ : float
-            Decay constant.
-
-        Returns
-        -------
-        h : np.ndarray
-            h(t), the impulse response as 1D array
-        """
-
-        # calculate response
-        h_prelim = (
-            (self.eta / self.mtt)
-            * np.exp(-self.eta * tau / self.mtt + self.eta - 1)
-            * np.exp(-lambda_ * tau)
-        )
-        h = np.where(tau < self.mtt * (1 - 1 / self.eta), 0.0, h_prelim)
-
-        return h
-
-
-class PM_Unit:
-    """
-    Piston flow model unit.
-
-    Attributes
-    ----------
-    mtt : float
-        Mean travel time.
-    parameters : list
-        List of parameters.
-    bounds : list
-        The bounds for the parameters. Consists of a tuple with the
-        structure (lower_bound, upper_bound) for each parameter.
-    """
-
-    def __init__(self, mtt, bounds=None):
-        """
-        The piston flow model unit initialization.
-
-        Parameters
-        ----------
-        mtt : float
-            Mean travel time.
-        bounds : list
-            The bounds for the parameters. Consists of a tuple with the
-            structure (lower_bound, upper_bound) for each parameter.
-
-        Returns
-        -------
-        None
-        """
-        # mean travel time
-        self.mtt = mtt
-        self.parameters = [self.mtt]
-
-        if bounds is not None:
-            self.bounds = list(bounds)
-        else:
-            self.bounds = [(0.0, 10000.0)]
-
-    def set_params(self, mtt):
-        """
-        Set the parameters of the unit.
-
-        Parameters
-        ----------
-        mtt : float
-            Mean travel time.
-
-        Returns
-        -------
-        None
-        """
-        self.mtt = mtt
-
-    def get_impulse_response(self, tau, dt, lambda_):
-        """
-        Impulse response function for the EPM.
-
-        Parameters
-        ----------
-        tau : np.ndarray
-            1D array of time points
-        dt : float
-            Time step size
-        lambda_ : float
-            Decay constant.
-
-        Returns
-        -------
-        h : np.ndarray
-            h(t), the impulse response as 1D array
-        """
-
-        # we compute the combined IRF g(tau) = f(tau) * z(tau)
-        # where f(tau) = delta(tau - t_m) and z(tau) = exp(-lambda tau).
-        # discretely, delta is approximated as 1/dt at the nearest index.
-
-        h = np.zeros_like(tau)
-        # find the index closest to t_m
-        idx = int(round(self.mtt / dt))
-        if 0 <= idx < len(tau):
-            h[idx] = np.exp(-lambda_ * self.mtt) / dt
-        return h
+        report_text = "\n".join(lines)
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(report_text)
+        return report_text
