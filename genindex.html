@@ -206,6 +206,8 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/ISOSIMpy.html">ISOSIMpy package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of ISOSIMpy package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/ISOSIMpy.model.html">ISOSIMpy.model package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of ISOSIMpy.model package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="api/ISOSIMpy.model.model.html">ISOSIMpy.model.model module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ISOSIMpy.model.solver.html">ISOSIMpy.model.solver module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ISOSIMpy.model.units.html">ISOSIMpy.model.units module</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="api/ISOSIMpy.app.html">ISOSIMpy.app module</a></li>
@@ -250,7 +252,7 @@
           
 <section class="genindex-section">
   <h1 id="index">Index</h1>
-  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#H"><strong>H</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#W"><strong>W</strong></a></div>
+  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#W"><strong>W</strong></a></div>
 </section>
 <section id="A" class="genindex-section">
   <h2>A</h2>
@@ -266,42 +268,12 @@
   </tr></table>
 </section>
 
-<section id="B" class="genindex-section">
-  <h2>B</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPM_Unit.bounds">bounds (ISOSIMpy.model.EPM_Unit attribute)</a>
-
-        <ul>
-          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.bounds">(ISOSIMpy.model.Model attribute)</a>
-</li>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.EPM_Unit.bounds">(ISOSIMpy.model.model.EPM_Unit attribute)</a>
-</li>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.bounds">(ISOSIMpy.model.model.Model attribute)</a>
-</li>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.PM_Unit.bounds">(ISOSIMpy.model.model.PM_Unit attribute)</a>
-</li>
-          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PM_Unit.bounds">(ISOSIMpy.model.PM_Unit attribute)</a>
-</li>
-        </ul></li>
-    </ul></td>
-  </tr></table>
-</section>
-
 <section id="C" class="genindex-section">
   <h2>C</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp">CalibrationApp (class in ISOSIMpy.app)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.check_model">check_model() (ISOSIMpy.model.Model method)</a>
-
-        <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.check_model">(ISOSIMpy.model.model.Model method)</a>
-</li>
-        </ul></li>
     </ul></td>
   </tr></table>
 </section>
@@ -324,18 +296,18 @@
   <h2>E</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPM_Unit">EPM_Unit (class in ISOSIMpy.model)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPMUnit">EPMUnit (class in ISOSIMpy.model)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.EPM_Unit">(class in ISOSIMpy.model.model)</a>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.EPMUnit">(class in ISOSIMpy.model.units)</a>
 </li>
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPM_Unit.eta">eta (ISOSIMpy.model.EPM_Unit attribute)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPMUnit.eta">eta (ISOSIMpy.model.EPMUnit attribute)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.EPM_Unit.eta">(ISOSIMpy.model.model.EPM_Unit attribute)</a>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.EPMUnit.eta">(ISOSIMpy.model.units.EPMUnit attribute)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -349,14 +321,6 @@
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.fixed_checkboxes">fixed_checkboxes (ISOSIMpy.app.CalibrationApp attribute)</a>
 </li>
     </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.fixed_parameters">fixed_parameters (ISOSIMpy.model.Model attribute)</a>
-
-        <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.fixed_parameters">(ISOSIMpy.model.model.Model attribute)</a>
-</li>
-        </ul></li>
-    </ul></td>
   </tr></table>
 </section>
 
@@ -364,28 +328,32 @@
   <h2>G</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPM_Unit.get_impulse_response">get_impulse_response() (ISOSIMpy.model.EPM_Unit method)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.get_bounds">get_bounds() (ISOSIMpy.model.Model method)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.EPM_Unit.get_impulse_response">(ISOSIMpy.model.model.EPM_Unit method)</a>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.get_bounds">(ISOSIMpy.model.model.Model method)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.PM_Unit.get_impulse_response">(ISOSIMpy.model.model.PM_Unit method)</a>
+        </ul></li>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPMUnit.get_impulse_response">get_impulse_response() (ISOSIMpy.model.EPMUnit method)</a>
+
+        <ul>
+          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PMUnit.get_impulse_response">(ISOSIMpy.model.PMUnit method)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PM_Unit.get_impulse_response">(ISOSIMpy.model.PM_Unit method)</a>
+          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Unit.get_impulse_response">(ISOSIMpy.model.Unit method)</a>
+</li>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.EPMUnit.get_impulse_response">(ISOSIMpy.model.units.EPMUnit method)</a>
+</li>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.PMUnit.get_impulse_response">(ISOSIMpy.model.units.PMUnit method)</a>
+</li>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.Unit.get_impulse_response">(ISOSIMpy.model.units.Unit method)</a>
 </li>
         </ul></li>
     </ul></td>
-  </tr></table>
-</section>
-
-<section id="H" class="genindex-section">
-  <h2>H</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.handle_fixed_parameters">handle_fixed_parameters() (ISOSIMpy.model.Model method)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.get_vector">get_vector() (ISOSIMpy.model.Model method)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.handle_fixed_parameters">(ISOSIMpy.model.model.Model method)</a>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.get_vector">(ISOSIMpy.model.model.Model method)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -404,12 +372,6 @@
 </li>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.init_parameters_tab">init_parameters_tab() (ISOSIMpy.app.CalibrationApp method)</a>
 </li>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.initial_parameters">initial_parameters (ISOSIMpy.model.Model attribute)</a>
-
-        <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.initial_parameters">(ISOSIMpy.model.model.Model attribute)</a>
-</li>
-        </ul></li>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.initUI">initUI() (ISOSIMpy.app.CalibrationApp method)</a>
 </li>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.input_series">input_series (ISOSIMpy.app.CalibrationApp attribute)</a>
@@ -420,8 +382,6 @@
           <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.input_series">(ISOSIMpy.model.model.Model attribute)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.is_monthly">is_monthly (ISOSIMpy.app.CalibrationApp attribute)</a>
 </li>
         <li>
@@ -431,6 +391,8 @@
           <li><a href="api/ISOSIMpy.html#module-ISOSIMpy">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     ISOSIMpy.app
 
@@ -450,6 +412,20 @@
 
         <ul>
           <li><a href="api/ISOSIMpy.model.model.html#module-ISOSIMpy.model.model">module</a>
+</li>
+        </ul></li>
+        <li>
+    ISOSIMpy.model.solver
+
+        <ul>
+          <li><a href="api/ISOSIMpy.model.solver.html#module-ISOSIMpy.model.solver">module</a>
+</li>
+        </ul></li>
+        <li>
+    ISOSIMpy.model.units
+
+        <ul>
+          <li><a href="api/ISOSIMpy.model.units.html#module-ISOSIMpy.model.units">module</a>
 </li>
         </ul></li>
     </ul></td>
@@ -490,12 +466,8 @@
           <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model">(class in ISOSIMpy.model.model)</a>
 </li>
         </ul></li>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.model_is_warm">model_is_warm (ISOSIMpy.model.Model attribute)</a>
-
-        <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.model_is_warm">(ISOSIMpy.model.model.Model attribute)</a>
+        <li><a href="api/ISOSIMpy.model.solver.html#ISOSIMpy.model.solver.Solver.model">model (ISOSIMpy.model.solver.Solver attribute)</a>
 </li>
-        </ul></li>
         <li>
     module
 
@@ -508,17 +480,21 @@
 </li>
           <li><a href="api/ISOSIMpy.model.model.html#module-ISOSIMpy.model.model">ISOSIMpy.model.model</a>
 </li>
+          <li><a href="api/ISOSIMpy.model.solver.html#module-ISOSIMpy.model.solver">ISOSIMpy.model.solver</a>
+</li>
+          <li><a href="api/ISOSIMpy.model.units.html#module-ISOSIMpy.model.units">ISOSIMpy.model.units</a>
+</li>
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPM_Unit.mtt">mtt (ISOSIMpy.model.EPM_Unit attribute)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPMUnit.mtt">mtt (ISOSIMpy.model.EPMUnit attribute)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.EPM_Unit.mtt">(ISOSIMpy.model.model.EPM_Unit attribute)</a>
+          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PMUnit.mtt">(ISOSIMpy.model.PMUnit attribute)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.PM_Unit.mtt">(ISOSIMpy.model.model.PM_Unit attribute)</a>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.EPMUnit.mtt">(ISOSIMpy.model.units.EPMUnit attribute)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PM_Unit.mtt">(ISOSIMpy.model.PM_Unit attribute)</a>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.PMUnit.mtt">(ISOSIMpy.model.units.PMUnit attribute)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -529,10 +505,10 @@
   <h2>N</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.n_warmup">n_warmup (ISOSIMpy.model.Model attribute)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.n_warmup">n_warmup (ISOSIMpy.model.Model property)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.n_warmup">(ISOSIMpy.model.model.Model attribute)</a>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.n_warmup">(ISOSIMpy.model.model.Model property)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -549,46 +525,44 @@
   </tr></table>
 </section>
 
-<section id="O" class="genindex-section">
-  <h2>O</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.objfunc">objfunc() (ISOSIMpy.model.Model method)</a>
-
-        <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.objfunc">(ISOSIMpy.model.model.Model method)</a>
-</li>
-        </ul></li>
-    </ul></td>
-  </tr></table>
-</section>
-
 <section id="P" class="genindex-section">
   <h2>P</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.param_entries">param_entries (ISOSIMpy.app.CalibrationApp attribute)</a>
 </li>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPM_Unit.parameters">parameters (ISOSIMpy.model.EPM_Unit attribute)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.param_keys">param_keys() (ISOSIMpy.model.Model method)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.parameters">(ISOSIMpy.model.Model attribute)</a>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.param_keys">(ISOSIMpy.model.model.Model method)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.EPM_Unit.parameters">(ISOSIMpy.model.model.EPM_Unit attribute)</a>
+        </ul></li>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPMUnit.param_values">param_values() (ISOSIMpy.model.EPMUnit method)</a>
+
+        <ul>
+          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PMUnit.param_values">(ISOSIMpy.model.PMUnit method)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.parameters">(ISOSIMpy.model.model.Model attribute)</a>
+          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Unit.param_values">(ISOSIMpy.model.Unit method)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.PM_Unit.parameters">(ISOSIMpy.model.model.PM_Unit attribute)</a>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.EPMUnit.param_values">(ISOSIMpy.model.units.EPMUnit method)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PM_Unit.parameters">(ISOSIMpy.model.PM_Unit attribute)</a>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.PMUnit.param_values">(ISOSIMpy.model.units.PMUnit method)</a>
+</li>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.Unit.param_values">(ISOSIMpy.model.units.Unit method)</a>
 </li>
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PM_Unit">PM_Unit (class in ISOSIMpy.model)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.params">params (ISOSIMpy.model.Model attribute)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.PM_Unit">(class in ISOSIMpy.model.model)</a>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.params">(ISOSIMpy.model.model.Model attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PMUnit">PMUnit (class in ISOSIMpy.model)</a>
+
+        <ul>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.PMUnit">(class in ISOSIMpy.model.units)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -609,42 +583,62 @@
   <h2>S</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.set_fixed_parameters">set_fixed_parameters() (ISOSIMpy.model.Model method)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.set_bounds">set_bounds() (ISOSIMpy.model.Model method)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.set_fixed_parameters">(ISOSIMpy.model.model.Model method)</a>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.set_bounds">(ISOSIMpy.model.model.Model method)</a>
 </li>
         </ul></li>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.set_init_parameters">set_init_parameters() (ISOSIMpy.model.Model method)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.set_fixed">set_fixed() (ISOSIMpy.model.Model method)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.set_init_parameters">(ISOSIMpy.model.model.Model method)</a>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.set_fixed">(ISOSIMpy.model.model.Model method)</a>
 </li>
         </ul></li>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPM_Unit.set_params">set_params() (ISOSIMpy.model.EPM_Unit method)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.set_initial">set_initial() (ISOSIMpy.model.Model method)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.EPM_Unit.set_params">(ISOSIMpy.model.model.EPM_Unit method)</a>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.set_initial">(ISOSIMpy.model.model.Model method)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.PM_Unit.set_params">(ISOSIMpy.model.model.PM_Unit method)</a>
+        </ul></li>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.set_param">set_param() (ISOSIMpy.model.Model method)</a>
+
+        <ul>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.set_param">(ISOSIMpy.model.model.Model method)</a>
 </li>
-          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PM_Unit.set_params">(ISOSIMpy.model.PM_Unit method)</a>
+        </ul></li>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.EPMUnit.set_param_values">set_param_values() (ISOSIMpy.model.EPMUnit method)</a>
+
+        <ul>
+          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.PMUnit.set_param_values">(ISOSIMpy.model.PMUnit method)</a>
+</li>
+          <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Unit.set_param_values">(ISOSIMpy.model.Unit method)</a>
+</li>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.EPMUnit.set_param_values">(ISOSIMpy.model.units.EPMUnit method)</a>
+</li>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.PMUnit.set_param_values">(ISOSIMpy.model.units.PMUnit method)</a>
+</li>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.Unit.set_param_values">(ISOSIMpy.model.units.Unit method)</a>
 </li>
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.set_vector">set_vector() (ISOSIMpy.model.Model method)</a>
+
+        <ul>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.set_vector">(ISOSIMpy.model.model.Model method)</a>
+</li>
+        </ul></li>
         <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.simulate">simulate() (ISOSIMpy.model.Model method)</a>
 
         <ul>
           <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.simulate">(ISOSIMpy.model.model.Model method)</a>
 </li>
         </ul></li>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.solve">solve() (ISOSIMpy.model.Model method)</a>
-
-        <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.solve">(ISOSIMpy.model.model.Model method)</a>
+        <li><a href="api/ISOSIMpy.model.solver.html#ISOSIMpy.model.solver.Solver.solve">solve() (ISOSIMpy.model.solver.Solver method)</a>
 </li>
-        </ul></li>
+        <li><a href="api/ISOSIMpy.model.solver.html#ISOSIMpy.model.solver.Solver">Solver (class in ISOSIMpy.model.solver)</a>
+</li>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.steady_state_input">steady_state_input (ISOSIMpy.app.CalibrationApp attribute)</a>
 
         <ul>
@@ -681,6 +675,12 @@
   <h2>U</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Unit">Unit (class in ISOSIMpy.model)</a>
+
+        <ul>
+          <li><a href="api/ISOSIMpy.model.units.html#ISOSIMpy.model.units.Unit">(class in ISOSIMpy.model.units)</a>
+</li>
+        </ul></li>
         <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.unit_fractions">unit_fractions (ISOSIMpy.model.Model attribute)</a>
 
         <ul>
@@ -691,14 +691,14 @@
 </li>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.unit_objects">unit_objects (ISOSIMpy.app.CalibrationApp attribute)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.units">units (ISOSIMpy.model.Model attribute)</a>
 
         <ul>
           <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.units">(ISOSIMpy.model.model.Model attribute)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.units_selected">units_selected (ISOSIMpy.app.CalibrationApp attribute)</a>
 </li>
         <li><a href="api/ISOSIMpy.app.html#ISOSIMpy.app.CalibrationApp.update_frequency">update_frequency() (ISOSIMpy.app.CalibrationApp method)</a>
@@ -717,10 +717,10 @@
   <h2>W</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.warmup">warmup() (ISOSIMpy.model.Model method)</a>
+        <li><a href="api/ISOSIMpy.model.html#ISOSIMpy.model.Model.write_report">write_report() (ISOSIMpy.model.Model method)</a>
 
         <ul>
-          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.warmup">(ISOSIMpy.model.model.Model method)</a>
+          <li><a href="api/ISOSIMpy.model.model.html#ISOSIMpy.model.model.Model.write_report">(ISOSIMpy.model.model.Model method)</a>
 </li>
         </ul></li>
     </ul></td>

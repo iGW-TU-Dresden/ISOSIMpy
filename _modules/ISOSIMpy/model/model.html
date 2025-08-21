@@ -207,6 +207,8 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/ISOSIMpy.html">ISOSIMpy package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of ISOSIMpy package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/ISOSIMpy.model.html">ISOSIMpy.model package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of ISOSIMpy.model package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.model.model.html">ISOSIMpy.model.model module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.model.solver.html">ISOSIMpy.model.solver module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.model.units.html">ISOSIMpy.model.units module</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api/ISOSIMpy.app.html">ISOSIMpy.app module</a></li>
@@ -249,643 +251,416 @@
         </div>
         <article role="main" id="furo-main-content">
           <h1>Source code for ISOSIMpy.model.model</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">differential_evolution</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.signal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">Unit</span>
+
+<span class="c1"># Each registry record stores numeric state + metadata used by the solver.</span>
+<span class="n">ParamRecord</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
 
 
-<span class="c1">### define functions / model</span>
 <div class="viewcode-block" id="Model">
 <a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model">[docs]</a>
+<span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The model class.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Forward model container with a parameter registry.</span>
 
-<span class="sd">    Attributes</span>
+<span class="sd">    The model aggregates units, keeps their mixing fractions, and performs the</span>
+<span class="sd">    convolution-based simulation. It also manages an explicit parameter</span>
+<span class="sd">    registry that stores **current values**, **initial values**, **optimizer</span>
+<span class="sd">    bounds**, and **fixed flags** per parameter.</span>
+
+<span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    dt : float</span>
-<span class="sd">        The time step size. Note that the units corresponding to the</span>
-<span class="sd">        time step size must be consistent with all other time-dependent</span>
-<span class="sd">        parameters / units. Has dimension [T]</span>
+<span class="sd">        Time step of the simulation (same units as ``mtt`` used by units).</span>
 <span class="sd">    lambda_ : float</span>
-<span class="sd">        The decay constant with. Has dimension [1/T]</span>
-<span class="sd">    input_series : array_like</span>
-<span class="sd">        The input series. Can have arbitrary units, but must be</span>
-<span class="sd">        consistent with the target series units.</span>
-<span class="sd">    target_series : array_like</span>
-<span class="sd">        The target series. Can have arbitrary units, but must be</span>
-<span class="sd">        consistent with the input series units.</span>
-<span class="sd">    steady_state_input : array_like, optional</span>
-<span class="sd">        The steady-state input. Can have arbitrary units, but must be</span>
-<span class="sd">        consistent with the input and target series units. Defauls to</span>
-<span class="sd">        None.</span>
+<span class="sd">        Decay constant in 1/time units.</span>
+<span class="sd">    input_series : ndarray</span>
+<span class="sd">        Forcing time series (length ``N``).</span>
+<span class="sd">    target_series : ndarray, optional</span>
+<span class="sd">        Observed output series (length ``N``); used only for calibration loss.</span>
+<span class="sd">    steady_state_input : float, optional</span>
+<span class="sd">        If provided, a warmup of constant input is prepended.</span>
 <span class="sd">    n_warmup_half_lives : int, optional</span>
-<span class="sd">        The number of half-lives to use for warmup. Defaults to 2.</span>
-<span class="sd">    units : list</span>
-<span class="sd">        The list of model units (each item being an instance of a unit</span>
-<span class="sd">        class).</span>
-<span class="sd">    parameters : array_like</span>
-<span class="sd">        The current parameters of the model. With n_units units, the last</span>
-<span class="sd">        n_units parameters are the fractions of each unit. In the case of a</span>
-<span class="sd">        single unit, the last parameter is 1.</span>
-<span class="sd">    unit_fractions : array_like</span>
-<span class="sd">        The fractions of each unit in the model; see `parameters`.</span>
-<span class="sd">    fixed_parameters : array_like</span>
-<span class="sd">        The parameters that are fixed during calibration. Is a list of</span>
-<span class="sd">        bools (one for each parameter), where True indicates a fixed</span>
-<span class="sd">        parameter.</span>
-<span class="sd">    bounds : array_like</span>
-<span class="sd">        The bounds for the parameters. Consists of a tuple with the</span>
-<span class="sd">        structure (lower_bound, upper_bound) for each parameter, even if</span>
-<span class="sd">        the parameter is fixed.</span>
-<span class="sd">    initial_parameters : array_like</span>
-<span class="sd">        The initial parameters of the model; see `parameters`.</span>
-<span class="sd">    model_is_warm : bool</span>
-<span class="sd">        Whether the model has been warmed up or not.</span>
-<span class="sd">    n_warmup : int</span>
-<span class="sd">        The number of warmup time steps derived from `n_warmup_half_lives`.</span>
+<span class="sd">        Heuristic warmup scaling in half-lives (kept for compatibility).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Units are added via :meth:`add_unit`. The method also registers unit</span>
+<span class="sd">      parameters into the model&#39;s registry.</span>
+<span class="sd">    - Bounds are **optimization bounds** only and can be provided at add time</span>
+<span class="sd">      or later via :meth:`set_bounds`.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">dt</span><span class="p">,</span>
-        <span class="n">lambda_</span><span class="p">,</span>
-        <span class="n">input_series</span><span class="p">,</span>
-        <span class="n">target_series</span><span class="p">,</span>
-        <span class="n">steady_state_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">n_warmup_half_lives</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The model class initialization.</span>
+    <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">input_series</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">target_series</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">steady_state_input</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">n_warmup_half_lives</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        dt : float</span>
-<span class="sd">            The time step size. Note that the units corresponding to the</span>
-<span class="sd">            time step size must be consistent with all other time-dependent</span>
-<span class="sd">            parameters / units. Has dimension [T]</span>
-<span class="sd">        lambda_ : float</span>
-<span class="sd">            The decay constant with. Has dimension [1/T]</span>
-<span class="sd">        input_series : array_like</span>
-<span class="sd">            The input series. Can have arbitrary units, but must be</span>
-<span class="sd">            consistent with the target series units.</span>
-<span class="sd">        target_series : array_like</span>
-<span class="sd">            The target series. Can have arbitrary units, but must be</span>
-<span class="sd">            consistent with the input series units.</span>
-<span class="sd">        steady_state_input : array_like, optional</span>
-<span class="sd">            The steady-state input. Can have arbitrary units, but must be</span>
-<span class="sd">            consistent with the input and target series units. Defauls to</span>
-<span class="sd">            None.</span>
-<span class="sd">        n_warmup_half_lives : int, optional</span>
-<span class="sd">            The number of half-lives to use for warmup. Defaults to 2.</span>
+    <span class="n">units</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">unit_fractions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_</span> <span class="o">=</span> <span class="n">lambda_</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">input_series</span> <span class="o">=</span> <span class="n">input_series</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span> <span class="o">=</span> <span class="n">target_series</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">steady_state_input</span> <span class="o">=</span> <span class="n">steady_state_input</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">n_warmup_half_lives</span> <span class="o">=</span> <span class="n">n_warmup_half_lives</span>
+    <span class="c1"># Parameter registry: key -&gt; record</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamRecord</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="c1"># list of units</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1"># parameters of n individual units</span>
-        <span class="c1"># last n parameters are fractions of individual units</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1"># list of unit fractions</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1"># fixed parameters</span>
-        <span class="c1"># list of bools; True if fixed, False if free</span>
-        <span class="c1"># does not include the unit fractions</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="c1"># bounds, does not include the unit fractions</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1"># initial parameters</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">initial_parameters</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="c1"># warmup trigger</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_is_warm</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="c1"># warmup steps</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">n_warmup</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Internal warmup state</span>
+    <span class="n">_is_warm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_n_warmup</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Model.add_unit">
 <a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.add_unit">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a unit to the model.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_unit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="n">Unit</span><span class="p">,</span>
+        <span class="n">fraction</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a unit, register its parameters, and set its mixture fraction.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        unit : Unit</span>
-<span class="sd">            The unit to add to the model.</span>
+<span class="sd">        unit : :class:`~ISOSIMpy.model.units.Unit`</span>
+<span class="sd">            The unit instance to add.</span>
 <span class="sd">        fraction : float</span>
-<span class="sd">            The fraction of the unit in the model.</span>
+<span class="sd">            Mixture fraction of this unit in the overall response. Fractions</span>
+<span class="sd">            should sum to ~1 across all units.</span>
+<span class="sd">        prefix : str, optional</span>
+<span class="sd">            Namespace prefix for the unit&#39;s parameters (e.g., ``&quot;epm&quot;``). If</span>
+<span class="sd">            omitted, ``&quot;u{index}&quot;`` is used in insertion order.</span>
+<span class="sd">        bounds : list of (float, float), optional</span>
+<span class="sd">            Optimizer bounds for the unit&#39;s parameters in the same order as</span>
+<span class="sd">            returned by ``unit.param_values()``. If omitted, bounds are left</span>
+<span class="sd">            as ``None`` and can be supplied later via :meth:`set_bounds`.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``bounds`` is provided and its length does not match the number</span>
+<span class="sd">            of unit parameters.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">fraction</span><span class="p">))</span>
+
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;u</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">local_params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">param_values</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of bounds list must match number of unit parameters&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">local_name</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">local_params</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">local_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">),</span>
+                <span class="s2">&quot;initial&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">),</span>
+                <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span>
+                <span class="s2">&quot;fixed&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;unit_index&quot;</span><span class="p">:</span> <span class="n">idx</span><span class="p">,</span>
+                <span class="s2">&quot;local_name&quot;</span><span class="p">:</span> <span class="n">local_name</span><span class="p">,</span>
+            <span class="p">}</span></div>
 
 
-<div class="viewcode-block" id="Model.warmup">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.warmup">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">warmup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Warm up the model.</span>
+<div class="viewcode-block" id="Model.param_keys">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.param_keys">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">param_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return parameter keys in a stable order.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        None</span>
+<span class="sd">        free_only : bool, optional</span>
+<span class="sd">            If ``True``, return only parameters with ``fixed == False``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        list of str</span>
+<span class="sd">            Fully-qualified parameter keys (e.g., ``&quot;epm.mtt&quot;``).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># add warmup period before input series (and target series)</span>
-        <span class="c1"># define length of warmup period</span>
-        <span class="c1"># get half life</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;unit_index&quot;</span><span class="p">],</span> <span class="n">kv</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;local_name&quot;</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">free_only</span> <span class="ow">and</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fixed&quot;</span><span class="p">))]</span></div>
+
+
+<div class="viewcode-block" id="Model.get_vector">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.get_vector">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">free_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export parameter values as a flat vector in registry order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        which : {&quot;value&quot;, &quot;initial&quot;}</span>
+<span class="sd">            Whether to export current values or initial guesses.</span>
+<span class="sd">        free_only : bool, optional</span>
+<span class="sd">            If ``True``, export only free parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of float</span>
+<span class="sd">            Parameter vector following :meth:`param_keys` order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">which</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;initial&quot;</span><span class="p">}</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_keys</span><span class="p">(</span><span class="n">free_only</span><span class="o">=</span><span class="n">free_only</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">which</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Model.set_vector">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.set_vector">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_vector</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">vec</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">free_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a vector into the registry (and units) in registry order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vec : sequence of float</span>
+<span class="sd">            Values to assign (length must match the number of addressed params).</span>
+<span class="sd">        which : {&quot;value&quot;, &quot;initial&quot;}</span>
+<span class="sd">            Destination field to write (``&quot;value&quot;`` also writes through to units).</span>
+<span class="sd">        free_only : bool, optional</span>
+<span class="sd">            If ``True``, write into free parameters only.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">which</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;initial&quot;</span><span class="p">}</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_keys</span><span class="p">(</span><span class="n">free_only</span><span class="o">=</span><span class="n">free_only</span><span class="p">)</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">vec</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">which</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">if</span> <span class="n">which</span> <span class="o">==</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span>
+                <span class="c1"># push through to owning unit immediately</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;unit_index&quot;</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
+                <span class="n">local</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;local_name&quot;</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">set_param_values</span><span class="p">({</span><span class="n">local</span><span class="p">:</span> <span class="n">v</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Model.set_param">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.set_param">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set a single parameter&#39;s **current** value and update the unit.</span>
+
+<span class="sd">        This is a convenience wrapper around :meth:`set_vector` for one value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;unit_index&quot;</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
+        <span class="n">local</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;local_name&quot;</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">set_param_values</span><span class="p">({</span><span class="n">local</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)})</span></div>
+
+
+<div class="viewcode-block" id="Model.set_initial">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.set_initial">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_initial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set a single parameter&#39;s **initial** value used for optimization seeding.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;initial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Model.set_bounds">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.set_bounds">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set optimizer bounds for a single parameter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            Fully-qualified parameter key (e.g., ``&quot;epm.mtt&quot;``).</span>
+<span class="sd">        bounds : (float, float)</span>
+<span class="sd">            Lower and upper search bounds for the optimizer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">bounds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;bounds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lo</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">hi</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Model.set_fixed">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.set_fixed">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mark a parameter as fixed (not optimized).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;fixed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">fixed</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Model.get_bounds">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.get_bounds">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return bounds for parameters in registry order.</span>
+
+<span class="sd">        Raises a ``ValueError`` if any addressed parameter has no bounds set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_keys</span><span class="p">(</span><span class="n">free_only</span><span class="o">=</span><span class="n">free_only</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;bounds&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing optimizer bounds for parameter: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_warmup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of warmup steps prepended to the series.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_warmup</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_warmup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">t12</span> <span class="o">=</span> <span class="mf">0.693</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_</span>
-        <span class="c1"># set warmup to approx. 5 half lives</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">n_warmup</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">t12</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span>
-        <span class="c1"># create warmup series</span>
-        <span class="n">warmup_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_warmup</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">steady_state_input</span>
-        <span class="c1"># add warmup series to input series</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">input_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">warmup_series</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_series</span><span class="p">))</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_warmup</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">t12</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_warmup_half_lives</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steady_state_input</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_warmup</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># no warmup requested → ensure we don&#39;t slice anything off</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_n_warmup</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_warm</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span>
+        <span class="n">warm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_warmup</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steady_state_input</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">warm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_series</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># add nans to target series</span>
-            <span class="n">warmup_series</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">warmup_series</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span><span class="p">))</span>
-        <span class="k">return</span></div>
+            <span class="n">warm_nan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_warmup</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">warm_nan</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_warm</span> <span class="o">=</span> <span class="kc">True</span>
 
-
-<div class="viewcode-block" id="Model.check_model">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.check_model">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">check_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if the model is valid (check warmup, check parameters, check</span>
-<span class="sd">        unit fractions).</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        None</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># check warmup</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_is_warm</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">steady_state_input</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_is_warm</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_is_warm</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">steady_state_input</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_is_warm</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_is_warm</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Problem with model warmup.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># ckeck parameters</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Number of parameters does not match number&quot;</span>
-                <span class="s2">&quot; of entries in fixed_parameters. </span><span class="si">{}</span><span class="s2"> != </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Number of parameters does not match number&quot;</span>
-                <span class="s2">&quot; of entries in bounds. </span><span class="si">{}</span><span class="s2"> != </span><span class="si">{}</span><span class="s2">. Note that parameters need&quot;</span>
-                <span class="s2">&quot; bounds even if they are fixed.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">))</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.99</span>
-            <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1.01</span>
-        <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sum of unit fractions does not equal 1.&quot;</span><span class="p">)</span></div>
-
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_warm</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_warmup</span><span class="p">()</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mf">0.99</span> <span class="o">&lt;=</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mf">1.01</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sum of unit fractions must be ~1.0.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Model.simulate">
 <a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.simulate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Simulate the model given parameters</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        parameters : list</span>
-<span class="sd">            The parameters to simulate the model with. With n_units units,</span>
-<span class="sd">            the last n_units parameters are the fractions of each unit. In</span>
-<span class="sd">            the case of 1 unit, the last parameter is 1.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the forward model using current registry values.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        sim : np.ndarray</span>
-<span class="sd">            The simulated series.</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            Simulated output aligned with ``target_series`` (warmup removed).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
-
-        <span class="c1"># check model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">check_model</span><span class="p">()</span>
-
-        <span class="c1"># create series of time steps</span>
-        <span class="c1"># this includes the optional warmup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check</span><span class="p">()</span>
         <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_series</span><span class="p">)</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
-
-        <span class="c1"># get total number of units in model</span>
-        <span class="c1"># n_units = len(self.units)</span>
-
-        <span class="c1"># get empty target</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
         <span class="n">sim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-
-        <span class="c1"># iterate over units and simulate</span>
-        <span class="n">param_count</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">):</span>
-            <span class="c1"># get number of parameters</span>
-            <span class="n">n_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
-            <span class="c1"># set parameters</span>
-            <span class="n">unit</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">*</span><span class="n">parameters</span><span class="p">[</span><span class="n">param_count</span> <span class="p">:</span> <span class="p">(</span><span class="n">param_count</span> <span class="o">+</span> <span class="n">n_params</span><span class="p">)])</span>
-            <span class="c1"># get impulse response</span>
-            <span class="n">impulse_response</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">get_impulse_response</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_</span><span class="p">)</span>
-            <span class="c1"># convolution</span>
-            <span class="n">contribution</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_series</span><span class="p">,</span> <span class="n">impulse_response</span><span class="p">)[:</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
-            <span class="p">)</span>
-            <span class="c1"># scale contribution by fraction</span>
-            <span class="n">contribution</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span><span class="p">[</span><span class="n">num</span><span class="p">]</span>
-            <span class="c1"># add to simulation</span>
-            <span class="n">sim</span> <span class="o">+=</span> <span class="n">contribution</span>
-            <span class="c1"># update parameter count</span>
-            <span class="n">param_count</span> <span class="o">+=</span> <span class="n">n_params</span>
-
-        <span class="c1"># remove warmup period</span>
-        <span class="n">sim</span> <span class="o">=</span> <span class="n">sim</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_warmup</span> <span class="p">:]</span>
-
-        <span class="k">return</span> <span class="n">sim</span></div>
+        <span class="k">for</span> <span class="n">frac</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">):</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">get_impulse_response</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_</span><span class="p">)</span>
+            <span class="n">contrib</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_series</span><span class="p">,</span> <span class="n">h</span><span class="p">)[:</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+            <span class="n">sim</span> <span class="o">+=</span> <span class="n">frac</span> <span class="o">*</span> <span class="n">contrib</span>
+        <span class="k">return</span> <span class="n">sim</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_warmup</span> <span class="p">:]</span></div>
 
 
-<div class="viewcode-block" id="Model.handle_fixed_parameters">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.handle_fixed_parameters">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">handle_fixed_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.write_report">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.write_report">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_report</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">sim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Model Report&quot;</span><span class="p">,</span>
+        <span class="n">include_initials</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_bounds</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Handle fixed parameters. This is done to conform with the</span>
-<span class="sd">        differential evolution optimizer.</span>
+<span class="sd">        Create a simple text report of the current model configuration and fit.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        parameters : list</span>
-<span class="sd">            The parameters to simulate the model with. With n_units units,</span>
-<span class="sd">            the last n_units parameters are the fractions of each unit. In</span>
-<span class="sd">            the case of 1 unit, the last parameter is 1.</span>
+<span class="sd">        filepath : str</span>
+<span class="sd">            Path of the text file to write.</span>
+<span class="sd">        frequency : str</span>
+<span class="sd">            Simulation frequency (e.g., ``&quot;1h&quot;``). This is not checked</span>
+<span class="sd">            internally and directly written to the report.</span>
+<span class="sd">        sim : ndarray, optional</span>
+<span class="sd">            Simulated series corresponding to the *current* parameters. If not</span>
+<span class="sd">            provided and `target_series` is present, the method will call</span>
+<span class="sd">            :meth:`simulate` to compute one.</span>
+<span class="sd">        title : str, optional</span>
+<span class="sd">            Title shown at the top of the report.</span>
+<span class="sd">        include_initials : bool, optional</span>
+<span class="sd">            Whether to include initial values in the parameter table.</span>
+<span class="sd">        include_bounds : bool, optional</span>
+<span class="sd">            Whether to include optimizer bounds in the parameter table.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        parameters_ : np.ndarray</span>
-<span class="sd">            The parameters with fixed parameters removed.</span>
+<span class="sd">        str</span>
+<span class="sd">            The full report text that was written to `filepath`.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Parameters are grouped by their namespace prefix (e.g., ``&quot;epm&quot;`` in</span>
+<span class="sd">          keys like ``&quot;epm.mtt&quot;``).</span>
+<span class="sd">        - If `target_series` is available, the report includes the mean squared</span>
+<span class="sd">          error (MSE) between the simulation and observations using overlapping,</span>
+<span class="sd">          non-NaN entries.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># handle fixed parameters</span>
-        <span class="c1"># here we get a list of parameters which may miss some fixed</span>
-        <span class="c1"># parameters</span>
-        <span class="c1"># get initial parameters which include free and fixed parameters</span>
-        <span class="c1"># free parameters may be wrong but fixed parameters remain at</span>
-        <span class="c1"># initial values</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">parameters_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_parameters</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
-            <span class="n">parameters_</span><span class="p">[</span><span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Fixed parameters not set.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">parameters_</span></div>
+        <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
+        <span class="c1"># Header</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">title</span><span class="p">),</span> <span class="mi">20</span><span class="p">))</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Model.objfunc">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.objfunc">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">objfunc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Objective function (mean squared error) for calibration.</span>
+        <span class="c1"># Model settings</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Model settings&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--------------&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time step (dt):          </span><span class="si">{</span><span class="n">frequency</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Decay constant (lambda): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lambda_</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warmup steps:            </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_warmup</span><span class="si">}</span><span class="s2"> (auto)&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Units count:             </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        parameters : list</span>
-<span class="sd">            The parameters to simulate the model with. With n_units units,</span>
-<span class="sd">            the last n_units parameters are the fractions of each unit. In</span>
-<span class="sd">            the case of 1 unit, the last parameter is 1.</span>
+        <span class="c1"># MSE if possible</span>
+        <span class="n">mse_text</span> <span class="o">=</span> <span class="s2">&quot;n/a&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_warmup</span> <span class="p">:]</span>
+            <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">sim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="p">):</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+                    <span class="n">mse</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">sim</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+                    <span class="n">mse_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mse</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Global fit&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;----------&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MSE: </span><span class="si">{</span><span class="n">mse_text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        obj : float</span>
-<span class="sd">            The objective function value.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">parameters_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_fixed_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="c1"># Parameter table grouped by unit prefix</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Parameters by unit&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;------------------&quot;</span><span class="p">)</span>
+        <span class="n">grouped</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_keys</span><span class="p">(</span><span class="n">free_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">key</span> <span class="k">else</span> <span class="s2">&quot;(root)&quot;</span>
+            <span class="n">grouped</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
-        <span class="n">sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">parameters_</span><span class="p">)</span>
-        <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_series</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_warmup</span> <span class="p">:])</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
-        <span class="n">residuals</span> <span class="o">=</span> <span class="n">sim</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_warmup</span> <span class="p">:][</span><span class="n">mask</span><span class="p">]</span>
+        <span class="c1"># pretty print per group</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">grouped</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+            <span class="n">frac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit_fractions</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">frac_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fraction=</span><span class="si">{</span><span class="n">frac</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">frac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">frac_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">grouped</span><span class="p">[</span><span class="n">prefix</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;local_name&quot;</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="n">rec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
+                <span class="n">fixed</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fixed&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">k</span><span class="si">:</span><span class="s2">15s</span><span class="si">}</span><span class="s2"> value=</span><span class="si">{</span><span class="n">val</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="n">include_initials</span><span class="p">:</span>
+                    <span class="n">row</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;, initial=</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;initial&#39;</span><span class="p">])</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="n">include_bounds</span> <span class="ow">and</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bounds&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;bounds&quot;</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+                    <span class="n">row</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;, bounds=(</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">lo</span><span class="p">)</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">hi</span><span class="p">)</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="n">row</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;, fixed=</span><span class="si">{</span><span class="n">fixed</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-        <span class="n">obj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">residuals</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">obj</span></div>
-
-
-<div class="viewcode-block" id="Model.set_init_parameters">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.set_init_parameters">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_init_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_parameters</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set the initial parameters of the model.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        init_parameters : list</span>
-<span class="sd">            The initial parameters of the model. With n_units units,</span>
-<span class="sd">            the last n_units parameters are the fractions of each unit. In</span>
-<span class="sd">            the case of 1 unit, the last parameter is 1.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">init_parameters</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">initial_parameters</span> <span class="o">=</span> <span class="n">init_parameters</span></div>
-
-
-<div class="viewcode-block" id="Model.set_fixed_parameters">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.set_fixed_parameters">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_fixed_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_parameters</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set the fixed parameters of the model.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        fixed_parameters : list</span>
-<span class="sd">            The parameters that are fixed during calibration. Is a list of</span>
-<span class="sd">            bools (one for each parameter), where True indicates a fixed</span>
-<span class="sd">            parameter.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fixed_parameters</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Model.solve">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.Model.solve">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Solve (i.e., calibrate) the model.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        None</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        parameters_opt_ : np.ndarray</span>
-<span class="sd">            The optimized parameters.</span>
-<span class="sd">        sim_opt : np.ndarray</span>
-<span class="sd">            The simulation with optimized parameters (including warmup).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_series</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Target series not set.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># handle bounds</span>
-        <span class="c1"># just as parameters themselves we need to remove bounds from fixed</span>
-        <span class="c1"># parameters so that they are not calibrated</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">bounds_</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">cond</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">cond</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">bounds_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span>
-
-        <span class="n">result</span> <span class="o">=</span> <span class="n">differential_evolution</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">objfunc</span><span class="p">,</span>
-            <span class="n">bounds</span><span class="o">=</span><span class="n">bounds_</span><span class="p">,</span>
-            <span class="n">maxiter</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
-            <span class="n">popsize</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-            <span class="n">mutation</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.99</span><span class="p">),</span>
-            <span class="n">recombination</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-            <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">parameters_opt</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span>
-        <span class="c1"># distribute / handle parameters, taking fixed parameters into</span>
-        <span class="c1"># account</span>
-        <span class="n">parameters_opt_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_fixed_parameters</span><span class="p">(</span><span class="n">parameters_opt</span><span class="p">)</span>
-        <span class="n">sim_opt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">parameters_opt_</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">parameters_opt_</span><span class="p">,</span> <span class="n">sim_opt</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="EPM_Unit">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.EPM_Unit">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">EPM_Unit</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Exponential piston flow model unit.</span>
-
-<span class="sd">    Attributes</span>
-<span class="sd">    ----------</span>
-<span class="sd">    mtt : float</span>
-<span class="sd">        Mean travel time.</span>
-<span class="sd">    eta : float</span>
-<span class="sd">        Ratio of total volume to volume of exponential model (&gt;= 1).</span>
-<span class="sd">        eta = 1 means only exponential model, eta &gt; 1 means exponential</span>
-<span class="sd">        model with (eta - 1) part piston flow.</span>
-<span class="sd">    parameters : list</span>
-<span class="sd">        List of parameters.</span>
-<span class="sd">    bounds : list</span>
-<span class="sd">        The bounds for the parameters. Consists of a tuple with the</span>
-<span class="sd">        structure (lower_bound, upper_bound) for each parameter.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mtt</span><span class="p">,</span> <span class="n">eta</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The exponential piston flow model unit initialization.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        mtt : float</span>
-<span class="sd">            Mean travel time.</span>
-<span class="sd">        eta : float</span>
-<span class="sd">            Ratio of total volume to volume of exponential model (&gt;= 1).</span>
-<span class="sd">            eta = 1 means only exponential model, eta &gt; 1 means exponential</span>
-<span class="sd">            model with (eta - 1) part piston flow.</span>
-<span class="sd">        bounds : list</span>
-<span class="sd">            The bounds for the parameters. Consists of a tuple with the</span>
-<span class="sd">            structure (lower_bound, upper_bound) for each parameter.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># mean travel time</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span> <span class="o">=</span> <span class="n">mtt</span>
-        <span class="c1"># ratio of total volume to volume of exponential model (&gt;= 1)</span>
-        <span class="c1"># eta = 1 means only exponential model</span>
-        <span class="c1"># eta &gt; 1 means exponential model with (eta - 1) part piston flow</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mtt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10000.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)]</span>
-
-<div class="viewcode-block" id="EPM_Unit.set_params">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.EPM_Unit.set_params">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mtt</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set the parameters of the unit.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        mtt : float</span>
-<span class="sd">            Mean travel time.</span>
-<span class="sd">        eta : float</span>
-<span class="sd">            Ratio of total volume to volume of exponential model (&gt;= 1).</span>
-<span class="sd">            eta = 1 means only exponential model, eta &gt; 1 means exponential</span>
-<span class="sd">            model with (eta - 1) part piston flow.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span> <span class="o">=</span> <span class="n">mtt</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span></div>
-
-
-<div class="viewcode-block" id="EPM_Unit.get_impulse_response">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.EPM_Unit.get_impulse_response">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_impulse_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">lambda_</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Impulse response function for the EPM.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        tau : np.ndarray</span>
-<span class="sd">            1D array of time points</span>
-<span class="sd">        dt : float</span>
-<span class="sd">            Time step size</span>
-<span class="sd">        lambda_ : float</span>
-<span class="sd">            Decay constant.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        h : np.ndarray</span>
-<span class="sd">            h(t), the impulse response as 1D array</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># calculate response</span>
-        <span class="n">h_prelim</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span><span class="p">)</span>
-            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">*</span> <span class="n">tau</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">lambda_</span> <span class="o">*</span> <span class="n">tau</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">tau</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">h_prelim</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">h</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="PM_Unit">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.PM_Unit">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">PM_Unit</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Piston flow model unit.</span>
-
-<span class="sd">    Attributes</span>
-<span class="sd">    ----------</span>
-<span class="sd">    mtt : float</span>
-<span class="sd">        Mean travel time.</span>
-<span class="sd">    parameters : list</span>
-<span class="sd">        List of parameters.</span>
-<span class="sd">    bounds : list</span>
-<span class="sd">        The bounds for the parameters. Consists of a tuple with the</span>
-<span class="sd">        structure (lower_bound, upper_bound) for each parameter.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mtt</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The piston flow model unit initialization.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        mtt : float</span>
-<span class="sd">            Mean travel time.</span>
-<span class="sd">        bounds : list</span>
-<span class="sd">            The bounds for the parameters. Consists of a tuple with the</span>
-<span class="sd">            structure (lower_bound, upper_bound) for each parameter.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># mean travel time</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span> <span class="o">=</span> <span class="n">mtt</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mtt</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10000.0</span><span class="p">)]</span>
-
-<div class="viewcode-block" id="PM_Unit.set_params">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.PM_Unit.set_params">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mtt</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set the parameters of the unit.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        mtt : float</span>
-<span class="sd">            Mean travel time.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span> <span class="o">=</span> <span class="n">mtt</span></div>
-
-
-<div class="viewcode-block" id="PM_Unit.get_impulse_response">
-<a class="viewcode-back" href="../../../api/ISOSIMpy.model.model.html#ISOSIMpy.model.PM_Unit.get_impulse_response">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_impulse_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">lambda_</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Impulse response function for the EPM.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        tau : np.ndarray</span>
-<span class="sd">            1D array of time points</span>
-<span class="sd">        dt : float</span>
-<span class="sd">            Time step size</span>
-<span class="sd">        lambda_ : float</span>
-<span class="sd">            Decay constant.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        h : np.ndarray</span>
-<span class="sd">            h(t), the impulse response as 1D array</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># we compute the combined IRF g(tau) = f(tau) * z(tau)</span>
-        <span class="c1"># where f(tau) = delta(tau - t_m) and z(tau) = exp(-lambda tau).</span>
-        <span class="c1"># discretely, delta is approximated as 1/dt at the nearest index.</span>
-
-        <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
-        <span class="c1"># find the index closest to t_m</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mtt</span> <span class="o">/</span> <span class="n">dt</span><span class="p">))</span>
-        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tau</span><span class="p">):</span>
-            <span class="n">h</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">lambda_</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span><span class="p">)</span> <span class="o">/</span> <span class="n">dt</span>
-        <span class="k">return</span> <span class="n">h</span></div>
+        <span class="n">report_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">report_text</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report_text</span></div>
 </div>
 
 </pre></div>
