@@ -14,12 +14,18 @@ author = "Max G. Rudolph"
 
 extensions = [
     "myst_parser",
+    "myst_nb",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
+    "sphinx_design",
 ]
+
+# notebook execution (safe default for CI)
+nb_execution_mode = "off"  # "cache" or "auto" for execution enabled
+nb_execution_timeout = 300
 
 # mock heavy deps during doc builds
 autodoc_mock_imports = ["PyQt5", "numpy", "scipy", "matplotlib"]
@@ -30,10 +36,10 @@ autodoc_default_options = {"members": True, "undoc-members": False, "show-inheri
 napoleon_google_docstring = False  # True if using Google style
 napoleon_numpy_docstring = True  # True if using NumPy style
 
-myst_enable_extensions = ["colon_fence"]
+myst_enable_extensions = ["colon_fence", "deflist", "fieldlist", "attrs"]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**/.ipynb_checkpoints"]
 
 html_theme = "furo"
 html_static_path = ["_static"]

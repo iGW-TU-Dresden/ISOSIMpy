@@ -21,7 +21,7 @@ jobs:
           # Either install dev extras...
           # pip install -e .[dev]
           # ...or install only what's needed for docs:
-          pip install sphinx myst-parser furo
+          pip install sphinx myst-parser furo sphinx-design
 
       - name: Generate API stubs (sphinx-apidoc)
         run: |
