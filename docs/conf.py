@@ -35,7 +35,13 @@ autodoc_default_options = {"members": True, "undoc-members": False, "show-inheri
 napoleon_google_docstring = False  # True if using Google style
 napoleon_numpy_docstring = True  # True if using NumPy style
 
-myst_enable_extensions = ["colon_fence", "deflist", "fieldlist", "attrs"]
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "fieldlist",
+    "attrs_inline",
+    "attrs_block",
+]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**/.ipynb_checkpoints"]
