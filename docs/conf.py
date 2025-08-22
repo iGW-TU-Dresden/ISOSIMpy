@@ -13,7 +13,6 @@ project = "ISOSIMpy"
 author = "Max G. Rudolph"
 
 extensions = [
-    "myst_parser",
     "myst_nb",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
