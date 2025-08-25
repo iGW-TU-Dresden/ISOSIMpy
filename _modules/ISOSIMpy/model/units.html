@@ -431,6 +431,84 @@
 
 
 
+<div class="viewcode-block" id="EMUnit">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.units.html#ISOSIMpy.model.EMUnit">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EMUnit</span><span class="p">(</span><span class="n">Unit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exponential Model (EM) unit.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mtt : float</span>
+<span class="sd">        Mean travel time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mtt</span><span class="p">:</span> <span class="nb">float</span>
+
+<div class="viewcode-block" id="EMUnit.param_values">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.units.html#ISOSIMpy.model.EMUnit.param_values">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">param_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get parameter values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, float]</span>
+<span class="sd">            Mapping from local parameter name to value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;mtt&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mtt</span><span class="p">)}</span></div>
+
+
+<div class="viewcode-block" id="EMUnit.set_param_values">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.units.html#ISOSIMpy.model.EMUnit.set_param_values">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_param_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set one or more local parameter values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        values : Dict[str, float]</span>
+<span class="sd">            Mapping from local parameter name to new value. Keys not present</span>
+<span class="sd">            are ignored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;mtt&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="s2">&quot;mtt&quot;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="EMUnit.get_impulse_response">
+<a class="viewcode-back" href="../../../api/ISOSIMpy.model.units.html#ISOSIMpy.model.EMUnit.get_impulse_response">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_impulse_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;EM impulse response with decay.</span>
+
+<span class="sd">        The continuous-time EPM response (without decay) is</span>
+<span class="sd">        ``h(τ) = (1/mtt) * exp(-τ / mtt)``. We also apply an exponential</span>
+<span class="sd">        decay term ``exp(-λ τ)``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tau : ndarray</span>
+<span class="sd">            Non-negative time axis (same spacing as simulation time grid).</span>
+<span class="sd">        dt : float</span>
+<span class="sd">            Time step size of the discretization.</span>
+<span class="sd">        lambda_ : float</span>
+<span class="sd">            Decay constant (1 / time units of ``tau``).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            Impulse response evaluated at ``tau``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check for edge cases</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+
+        <span class="c1"># base EM shape</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">tau</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtt</span><span class="p">)</span>
+        <span class="c1"># radioactive/first-order decay applied to transit time</span>
+        <span class="n">h</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">lambda_</span> <span class="o">*</span> <span class="n">tau</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">h</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="PMUnit">
 <a class="viewcode-back" href="../../../api/ISOSIMpy.model.units.html#ISOSIMpy.model.PMUnit">[docs]</a>
 <span class="nd">@dataclass</span>
