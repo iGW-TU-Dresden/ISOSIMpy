@@ -54,18 +54,18 @@ html_short_title = "ISOSIMpy"
 html_show_sphinx = True
 html_show_copyright = True
 
-html_theme_options = {
-    "use_edit_page_button": True,
-    "header_links_before_dropdown": 6,
-    "icon_links": [
-        {
-            "name": "GitHub",
-            "url": "https://github.com/iGW-TU-Dresden/ISOSIMpy",
-            "icon": "fab fa-github-square",
-            "type": "fontawesome",
-        }
-    ],
-}
+# html_theme_options = {
+#     "use_edit_page_button": True,
+#     "header_links_before_dropdown": 6,
+#     "icon_links": [
+#         {
+#             "name": "GitHub",
+#             "url": "https://github.com/iGW-TU-Dresden/ISOSIMpy",
+#             "icon": "fab fa-github-square",
+#             "type": "fontawesome",
+#         }
+#     ],
+# }
 
 # use None for inventories (Sphinx 8+)
 intersphinx_mapping = {
