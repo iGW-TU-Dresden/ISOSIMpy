@@ -23,7 +23,19 @@ from PyQt5.QtWidgets import (
 
 from . import model as mm
 
-# define some default values
+### Information
+#
+# This is the main application window for the ISOSIMpy GUI.
+# It is split into different window tabs for different parts of the workflow:
+#   1. Input Files / Data
+#   2. Model Design
+#   3. Parameters
+#   4. Simulation /  Calibration
+#
+# The app does not automatically include all functionality of
+# ISOSIMpy.model.
+
+# define default values for all units
 DEFAULTS = {
     "EPM": {
         "class": mm.EPMUnit,
@@ -49,6 +61,7 @@ DEFAULTS = {
 }
 
 
+# the main application window
 class CalibrationApp(QWidget):
     """
     The main application window class.
@@ -149,7 +162,11 @@ class CalibrationApp(QWidget):
         layout.addWidget(self.tabs)
         self.setLayout(layout)
 
-    ### TAB 0: File Input ###
+    #
+    ##
+    ### TAB 1: File Input ###
+    ##
+    #
     def init_file_input_tab(self):
         """
         Initialize the file input tab.
@@ -304,7 +321,11 @@ class CalibrationApp(QWidget):
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to load target file:\n{str(e)}")
 
-    ### TAB 1: Model Design ###
+    #
+    ##
+    ### TAB 2: Model Design ###
+    ##
+    #
     def init_model_design_tab(self):
         """
         Initialize the model design tab.
@@ -337,7 +358,11 @@ class CalibrationApp(QWidget):
 
         self.model_design_tab.setLayout(layout)
 
-    ### TAB 2: Parameter Assignment ###
+    #
+    ##
+    ### TAB 3: Parameter Assignment ###
+    ##
+    #
     def init_parameters_tab(self):
         """
         Initialize the parameter assignment tab.
@@ -465,7 +490,11 @@ class CalibrationApp(QWidget):
         self.param_layout.addWidget(QWidget(), row + 1, 3)  # filler
         self.param_layout.addWidget(QWidget(), row + 1, 4)  # no checkbox
 
-    ### TAB 3: Calibration ###
+    #
+    ##
+    ### TAB 4: Calibration ###
+    ##
+    #
     def init_calibration_tab(self):
         """
         Initialize the calibration tab.
@@ -480,13 +509,33 @@ class CalibrationApp(QWidget):
         """
         layout = QVBoxLayout()
 
+        # Initialize calibration status
+        self.model_is_calibrated = False
+
+        # Simulation button
         run_button = QPushButton("Run Simulation")
         run_button.clicked.connect(lambda: self.run_calibration(False))
         layout.addWidget(run_button)
 
+        # Calibration button
         run_button = QPushButton("Run Calibration")
         run_button.clicked.connect(lambda: self.run_calibration(True))
         layout.addWidget(run_button)
+
+        # Add space
+        layout.addStretch(1)
+
+        # Plot button
+        plot_button = QPushButton("Plot Results")
+        plot_button.clicked.connect(lambda: self.plotting())
+        layout.addWidget(plot_button)
+
+        # Report button
+        report_button = QPushButton("Write Report")
+        report_button.clicked.connect(
+            lambda: self.write_report(self.model_is_calibrated)  # pass calibration status
+        )
+        layout.addWidget(report_button)
 
         self.calibration_tab.setLayout(layout)
 
@@ -532,11 +581,13 @@ class CalibrationApp(QWidget):
             target_series = self.target_series[1]
 
             ### Set up model
-            # Get parameter values and fixed parameters
+            # Get parameter values and fixed parameters from widgets
             params = [float(e.text()) for e in self.param_entries]
             fixed = [cb.isChecked() for cb in self.fixed_checkboxes]
 
             # Reconstruct selected units
+            # At the moment, this is a bit unflexible as we only allow
+            # for one unit of each type and parallel units.
             selected_keys = []
             if self.epm_box.isChecked():
                 selected_keys.append("EPM")
@@ -556,6 +607,8 @@ class CalibrationApp(QWidget):
             )
 
             # Initialize bound list (bounds of all units and parameters)
+            # and iterate over selected units. Add units, bounds etc. to the
+            # model.
             bounds_list = []
             param_counter = 0
             for num, unit_key in enumerate(selected_keys):
@@ -575,6 +628,7 @@ class CalibrationApp(QWidget):
                     unit_fixed.append(fixed_param)
                     # Increment counter
                     param_counter += 1
+
                 # Add unit to model
                 if unit_key == "EPM":
                     new_unit = mm.EPMUnit(mtt=unit_params[0], eta=unit_params[1])
@@ -604,46 +658,72 @@ class CalibrationApp(QWidget):
                         bounds=unit_bounds,
                     )
                     ml.set_fixed("em.mtt", unit_fixed[0])
+
                 # Add bounds to global list
                 bounds_list.append(unit_bounds)
 
-            # add solver
+            # Add solver to the model
             solver = mm.Solver(model=ml)
 
+            # Calibrate the model or just simulate with current parameters.
             if calibrate:
                 opt_params, opt_sim = solver.solve()
+                QMessageBox.information(self, "Status", "Calibration finished.")
+                self.model_is_calibrated = True
             else:
                 opt_sim = ml.simulate()
+                QMessageBox.information(self, "Status", "Simulation finished.")
 
-            # Plotting
-            fig, ax = plt.subplots(figsize=(8, 4))
-            # ax.plot(times, input_series, label="Input")
-            ax.plot(times, target_series, label="Observations", c="k", marker="x", zorder=10)
-            ax.plot(times, opt_sim, label="Simulation", ls=":", c="r", lw=3)
-            ax.set_yscale("log")
-            # ax.set_ylim(0.1, 12)
-            ax.legend()
-            plt.tight_layout()
-            plt.show()
-
-            # write to txt file
-            if calibrate:
-                if self.is_monthly:
-                    frequency = "1 month"
-                else:
-                    frequency = "1 year"
-
-                _ = ml.write_report(
-                    filepath="report.txt",
-                    frequency=frequency,
-                    sim=opt_sim,
-                    title="Model Report",
-                    include_initials=True,
-                    include_bounds=True,
-                )
+            # Store data for plotting
+            self.plot_sim = opt_sim
+            self.plot_times = times
+            self.plot_target = target_series
+            self.model = ml
 
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
+
+    def plotting(self):
+        """
+        Plot output series and observations.
+        """
+
+        # Plotting
+        fig, ax = plt.subplots(figsize=(8, 4))
+        # ax.plot(times, input_series, label="Input")
+        ax.plot(
+            self.plot_times, self.plot_target, label="Observations", c="r", marker="x", zorder=10
+        )
+        ax.plot(self.plot_times, self.plot_sim, label="Simulation", c="k", lw=3)
+        ax.set_yscale("log")
+        # ax.set_ylim(0.1, 12)
+        ax.legend()
+        plt.tight_layout()
+        plt.show()
+
+    def write_report(self, calibrate):
+        # write to txt file
+        if not calibrate:
+            if self.model.target_series is None:
+                QMessageBox.information(
+                    self, "Status", "The model has no target series, cannot create report."
+                )
+            else:
+                QMessageBox.information(self, "Status", "The model has not been calibrated yet.")
+
+        if self.is_monthly:
+            frequency = "1 month"
+        else:
+            frequency = "1 year"
+
+        _ = self.model.write_report(
+            filepath="report.txt",
+            frequency=frequency,
+            sim=self.plot_sim,
+            title="Model Report",
+            include_initials=True,
+            include_bounds=True,
+        )
 
 
 # if __name__ == "__main__":
