@@ -1,6 +1,6 @@
 # we intentionally omit the Solver class from __all__ to avoid trouble
 # with autodoc (through Solver we otherwise hava a duplication of Model)
-__all__ = ["Model", "Unit", "EPMUnit", "PMUnit"]
+__all__ = ["Model", "Unit", "EPMUnit", "EMUnit", "PMUnit"]
 
 
 def __getattr__(name):
@@ -21,6 +21,10 @@ def __getattr__(name):
         from .units import EPMUnit
 
         return EPMUnit
+    if name == "EMUnit":
+        from .units import EMUnit
+
+        return EMUnit
     if name == "PMUnit":
         from .units import PMUnit
 

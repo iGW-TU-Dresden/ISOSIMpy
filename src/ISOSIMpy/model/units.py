@@ -142,6 +142,72 @@ class EPMUnit(Unit):
 
 
 @dataclass
+class EMUnit(Unit):
+    """Exponential Model (EM) unit.
+
+    Parameters
+    ----------
+    mtt : float
+        Mean travel time.
+    """
+
+    mtt: float
+
+    def param_values(self) -> Dict[str, float]:
+        """Get parameter values.
+
+        Returns
+        -------
+        Dict[str, float]
+            Mapping from local parameter name to value.
+        """
+        return {"mtt": float(self.mtt)}
+
+    def set_param_values(self, values: Dict[str, float]) -> None:
+        """Set one or more local parameter values.
+
+        Parameters
+        ----------
+        values : Dict[str, float]
+            Mapping from local parameter name to new value. Keys not present
+            are ignored.
+        """
+        if "mtt" in values:
+            self.mtt = float(values["mtt"])
+
+    def get_impulse_response(self, tau: np.ndarray, dt: float, lambda_: float) -> np.ndarray:
+        """EM impulse response with decay.
+
+        The continuous-time EPM response (without decay) is
+        ``h(τ) = (1/mtt) * exp(-τ / mtt)``. We also apply an exponential
+        decay term ``exp(-λ τ)``.
+
+        Parameters
+        ----------
+        tau : ndarray
+            Non-negative time axis (same spacing as simulation time grid).
+        dt : float
+            Time step size of the discretization.
+        lambda_ : float
+            Decay constant (1 / time units of ``tau``).
+
+        Returns
+        -------
+        ndarray
+            Impulse response evaluated at ``tau``.
+        """
+        # check for edge cases
+        if self.mtt <= 0.0:
+            return np.zeros_like(tau)
+
+        # base EM shape
+        h = (1 / self.mtt) * np.exp(-tau / self.mtt)
+        # radioactive/first-order decay applied to transit time
+        h *= np.exp(-lambda_ * tau)
+        return h
+
+
+@dataclass
 class PMUnit(Unit):
     """Piston-Flow Model (discrete delta at the mean travel time) with decay.
 

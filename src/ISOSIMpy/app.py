@@ -39,6 +39,13 @@ DEFAULTS = {
         "default_values": [240.0],
         "bounds": [(0.0, 2000.0)],
     },
+    "EM": {
+        "class": mm.EMUnit,
+        "name": "EM",
+        "param_names": ["Mean Transit Time"],
+        "default_values": [240.0],
+        "bounds": [(0.0, 2000.0)],
+    },
 }
 
 
@@ -314,12 +321,15 @@ class CalibrationApp(QWidget):
 
         self.epm_box = QCheckBox("Include EPM Unit")
         self.pm_box = QCheckBox("Include PM Unit")
+        self.em_box = QCheckBox("Include EM Unit")
         self.epm_box.setChecked(True)
         self.pm_box.setChecked(True)
+        self.em_box.setChecked(True)
 
         layout.addWidget(QLabel("Select which units to include in the model:"))
         layout.addWidget(self.epm_box)
         layout.addWidget(self.pm_box)
+        layout.addWidget(self.em_box)
 
         update_btn = QPushButton("Update Parameters")
         update_btn.clicked.connect(self.update_parameters_tab)
@@ -390,11 +400,13 @@ class CalibrationApp(QWidget):
 
         row = 1
 
-        n_units = sum([self.epm_box.isChecked(), self.pm_box.isChecked()])
+        n_units = sum([self.epm_box.isChecked(), self.pm_box.isChecked(), self.em_box.isChecked()])
 
-        for unit_key in ["EPM", "PM"]:
-            if (unit_key == "EPM" and self.epm_box.isChecked()) or (
-                unit_key == "PM" and self.pm_box.isChecked()
+        for unit_key in ["EPM", "PM", "EM"]:
+            if (
+                (unit_key == "EPM" and self.epm_box.isChecked())
+                or (unit_key == "PM" and self.pm_box.isChecked())
+                or (unit_key == "EM" and self.em_box.isChecked())
             ):
 
                 info = DEFAULTS[unit_key]
@@ -530,6 +542,8 @@ class CalibrationApp(QWidget):
                 selected_keys.append("EPM")
             if self.pm_box.isChecked():
                 selected_keys.append("PM")
+            if self.em_box.isChecked():
+                selected_keys.append("EM")
 
             # Initialize model
             ml = mm.Model(
@@ -581,14 +595,17 @@ class CalibrationApp(QWidget):
                         bounds=unit_bounds,
                     )
                     ml.set_fixed("pm.mtt", unit_fixed[0])
+                elif unit_key == "EM":
+                    new_unit = mm.EMUnit(mtt=unit_params[0])
+                    ml.add_unit(
+                        unit=new_unit,
+                        fraction=float(self.unit_fractions_entries[num].text()),
+                        prefix="em",
+                        bounds=unit_bounds,
+                    )
+                    ml.set_fixed("em.mtt", unit_fixed[0])
                 # Add bounds to global list
                 bounds_list.append(unit_bounds)
-
-            # TODO
-            # make sure the simulate function works (parameters are not
-            # explicitly passed to the function anymore)
-            # the calibration works but an error is returned at the end
-            # (error code / message is "0")
 
             # add solver
             solver = mm.Solver(model=ml)
