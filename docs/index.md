@@ -20,6 +20,7 @@ User guide on installation, usage, and the basic concepts of ISOSIMpy.
 
 ISOSIMpy code reference.
 :::
+::::
 
 This webpage provides the package documentation, user guides, and examples. The package is hosted on [GitHub](https://github.com/iGW-TU-Dresden/ISOSIMpy), where you can also find the executable that contains the GUI. The package can also be found on [PyPI](https://pypi.org/project/ISOSIMpy/). To install the Python package, simply
 
