@@ -48,6 +48,24 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**/.ipynb_checkpoints"]
 
 html_theme = "furo"
 html_static_path = ["_static"]
+html_logo = "_static/logo.png"
+html_title = "ISOSIMpy Documentation"
+html_short_title = "ISOSIMpy"
+html_show_sphinx = True
+html_show_copyright = True
+
+html_theme_options = {
+    "use_edit_page_button": True,
+    "header_links_before_dropdown": 6,
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/iGW-TU-Dresden/ISOSIMpy",
+            "icon": "fab fa-github-square",
+            "type": "fontawesome",
+        }
+    ],
+}
 
 # use None for inventories (Sphinx 8+)
 intersphinx_mapping = {
