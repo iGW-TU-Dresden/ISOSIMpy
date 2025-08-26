@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "ISOSIMpy"
 dynamic = ["version"]
 description = "Lumped parameter groundwater age simulations with a simple user interface - in Python"
-readme = { file = "README.md", content-type = "text/markdown" }
+readme = "README.md"
 authors = [{ name = "Max G. Rudolph" }]
 license = { text = "MIT" }
 requires-python = ">=3.9"
