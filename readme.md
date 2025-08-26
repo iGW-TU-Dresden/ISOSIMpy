@@ -5,7 +5,7 @@
 
 [![CI](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/ci.yml)
 [![Docs](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/docs.yml)
-[![Release](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/release.yml)
+[![Release](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/release.yml/badge.svg)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/release.yml)
 
 <img src="https://github.com/iGW-TU-Dresden/ISOSIMpy/blob/main/logo.png" width="400">
 

@@ -16,6 +16,17 @@ dependencies = [
   "scipy>=1.10",
   "PyQt5>=5.15",
 ]
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Topic :: Scientific/Engineering :: Hydrology",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Education",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: Microsoft :: Windows :: Windows 10",
+  "Typing :: Typed",
+]
 
 [project.urls]
 Homepage = "https://github.com/iGW-TU-Dresden/ISOSIMpy"
