@@ -45,7 +45,7 @@ def test_solver_fits_synthetic():
     err_init = float(np.mean((obs - sim_init) ** 2))
 
     solver = Solver(m)
-    sol, sim = solver.solve(maxiter=50, popsize=10)
+    sol, sim = solver.differential_evolution(maxiter=50, popsize=10)
     # at least should reduce error vs initials
     err_final = float(np.mean((obs - sim) ** 2))
     assert err_final < err_init
@@ -57,5 +57,5 @@ def test_solver_respects_fixed():
     fixed_before = m.params["epm.mtt"]["value"]
 
     solver = Solver(m)
-    sol, _ = solver.solve(maxiter=5, popsize=5)
+    sol, _ = solver.differential_evolution(maxiter=5, popsize=5)
     assert sol["epm.mtt"] == pytest.approx(fixed_before)
