@@ -3,9 +3,9 @@
 [![image](https://img.shields.io/pypi/pyversions/ISOSIMpy)](https://pypi.python.org/pypi/ISOSIMpy)
 
 
-[![image](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/ci.yml)
-[![image](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/docs.yml)
-[![image](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/release.yml)
+[![CI](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/ci.yml)
+[![Docs](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/docs.yml)
+[![Release](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/iGW-TU-Dresden/ISOSIMpy/actions/workflows/release.yml)
 
 <img src="https://github.com/iGW-TU-Dresden/ISOSIMpy/blob/main/logo.png" width="400">
 
