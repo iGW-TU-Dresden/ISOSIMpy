@@ -21,6 +21,33 @@ jobs:
       - run: python -m pip install -U pip build twine
       - run: python -m build
       - run: twine check dist/*
+      - name: Inspect METADATA/PKG-INFO
+        run: |
+          python - << 'PY'
+          import glob, zipfile, tarfile
+          whl = sorted(glob.glob('dist/*.whl'))[-1]
+          with zipfile.ZipFile(whl) as zf:
+              meta = [n for n in zf.namelist() if n.endswith('METADATA')][0]
+              text = zf.read(meta).decode('utf-8', errors='replace')
+              print("---- WHEEL METADATA ----")
+              print("\n".join([l for l in text.splitlines()
+                               if l.startswith(('Metadata-Version','Name:','Version:',
+                                                'Summary:','Description-Content-Type',
+                                                'Classifier','Requires-Python'))]))
+              print("\nHas Description section? ", "\n\n" in text)
+
+          sdist = sorted(glob.glob('dist/*.tar.gz'))[-1]
+          import tarfile
+          with tarfile.open(sdist, 'r:gz') as tf:
+              member = [m for m in tf.getmembers() if m.name.endswith('PKG-INFO')][0]
+              text = tf.extractfile(member).read().decode('utf-8', errors='replace')
+              print("\n---- SDIST PKG-INFO ----")
+              print("\n".join([l for l in text.splitlines()
+                               if l.startswith(('Metadata-Version','Name:','Version:',
+                                                'Summary:','Description-Content-Type',
+                                                'Classifier','Requires-Python'))]))
+              print("\nHas Description section? ", "\n\n" in text)
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: dist
