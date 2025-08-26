@@ -3,11 +3,11 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="ISOSIMpy" href="../api/modules.html" /><link rel="prev" title="Examples" href="index.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Modelling in the Bayesian Statistical Framework" href="example_02.html" /><link rel="prev" title="Examples" href="index.html" />
         <link rel="prefetch" href="../_static/logo.png" as="image" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
-        <title>A Basic Model - ISOSIMpy Documentation</title>
+        <title>Basic Modelling with ISOSIMpy - ISOSIMpy Documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
@@ -211,7 +211,9 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Examples</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">A Basic Model</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Basic Modelling with ISOSIMpy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_02.html">Modelling in the Bayesian Statistical Framework</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_03.html">Generate Synthetic Data</a></li>
 </ul>
 </li>
 </ul>
@@ -270,99 +272,67 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="a-basic-model">
-<h1>A Basic Model<a class="headerlink" href="#a-basic-model" title="Link to this heading">¶</a></h1>
+          <section id="basic-modelling-with-isosimpy">
+<h1>Basic Modelling with ISOSIMpy<a class="headerlink" href="#basic-modelling-with-isosimpy" title="Link to this heading">¶</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ISOSIMpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ism</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ISOSIMpy.model</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ism</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
 </pre></div>
 </div>
 </div>
 </div>
-<section id="generate-synthetic-observation-data">
-<h2>1. Generate Synthetic Observation Data<a class="headerlink" href="#generate-synthetic-observation-data" title="Link to this heading">¶</a></h2>
+<section id="load-synthetic-observation-data">
+<h2>1. Load (Synthetic) Observation Data<a class="headerlink" href="#load-synthetic-observation-data" title="Link to this heading">¶</a></h2>
+<p>See Example 3 on how this data is generated.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># make reproducible</span>
-<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-
-<span class="c1">### define input series</span>
-<span class="c1"># define time steps</span>
-<span class="n">timesteps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">50.0</span> <span class="o">*</span> <span class="mf">12.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="c1"># 50 years of monthly values</span>
-
-<span class="c1"># this represents the tracer input to the aquifer</span>
-<span class="c1"># we start with a constant input of 1.0</span>
-<span class="n">input_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">timesteps</span><span class="p">))</span>
-<span class="c1"># we add a pulse of higher tracer input during some years, similar to the</span>
-<span class="c1"># increase in tritium in the atmosphere</span>
-<span class="c1"># this is just a bell-shaped pulse</span>
-<span class="n">offset</span> <span class="o">=</span> <span class="mf">120.</span>
-<span class="n">scale</span> <span class="o">=</span> <span class="o">-</span> <span class="mf">0.0004</span> <span class="c1"># negative; closer to zero means wider pulse</span>
-<span class="n">input_series</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">scale</span> <span class="o">*</span> <span class="p">((</span><span class="n">timesteps</span> <span class="o">-</span> <span class="n">offset</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
-<span class="c1"># add some noise to the data</span>
-<span class="n">input_series</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_series</span><span class="p">))</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">### define model (the true system; in practice we don&#39;t know this)</span>
-<span class="c1"># get decay constant</span>
-<span class="c1"># we assume a half life of 12.3 years</span>
-<span class="n">t_half</span> <span class="o">=</span> <span class="mf">12.3</span> <span class="o">*</span> <span class="mf">12.0</span>
-<span class="n">lambda_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">t_half</span>
-
-<span class="c1"># create true observations using the model</span>
-<span class="c1"># time step is 1 month</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">ism</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">dt</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">lambda_</span><span class="o">=</span><span class="n">lambda_</span><span class="p">,</span>
-    <span class="n">input_series</span><span class="o">=</span><span class="n">input_series</span><span class="p">,</span>
-    <span class="n">steady_state_input</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
-    <span class="n">n_warmup_half_lives</span><span class="o">=</span><span class="mi">10</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># load input series</span>
+<span class="c1"># this would be the tracer concentration in precipitation or recharge in a</span>
+<span class="c1"># practical problem</span>
+<span class="n">file_name</span> <span class="o">=</span> <span class="s2">&quot;example_input_series.csv&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span>
+    <span class="n">file_name</span><span class="p">,</span>
+    <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;&lt;U7&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+    <span class="n">skip_header</span><span class="o">=</span><span class="mi">1</span>
 <span class="p">)</span>
 
-<span class="c1"># add an exponential-piston-flow unit</span>
-<span class="c1"># define the true model parameters</span>
-<span class="n">mtt_true</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">*</span> <span class="mi">17</span> <span class="c1"># 17 years</span>
-<span class="n">eta_true</span> <span class="o">=</span> <span class="mf">1.5</span>
-<span class="n">m</span><span class="o">.</span><span class="n">add_unit</span><span class="p">(</span>
-    <span class="n">ism</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">EPMUnit</span><span class="p">(</span><span class="n">mtt</span><span class="o">=</span><span class="n">mtt_true</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="n">eta_true</span><span class="p">),</span>
-    <span class="n">fraction</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
-    <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;epm&quot;</span>
+<span class="n">timestamps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="sa">r</span><span class="s2">&quot;%Y-%m&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+<span class="n">input_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+
+<span class="c1"># load observation series</span>
+<span class="c1"># this would be the measured tracer concentration in groudnwater in a</span>
+<span class="c1"># practical problem</span>
+<span class="n">file_name</span> <span class="o">=</span> <span class="s2">&quot;example_observation_series.csv&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span>
+    <span class="n">file_name</span><span class="p">,</span>
+    <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;&lt;U7&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+    <span class="n">skip_header</span><span class="o">=</span><span class="mi">1</span>
 <span class="p">)</span>
 
-<span class="n">true_params</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">params</span>
+<span class="n">timestamps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="sa">r</span><span class="s2">&quot;%Y-%m&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+<span class="n">obs_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
 
-<span class="c1"># simulate</span>
-<span class="n">output_series</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># make reproducible</span>
-<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="c1"># load full system output series</span>
+<span class="c1"># this would be the true tracer concentration in groudnwater in a practical</span>
+<span class="c1"># problem; this is not available in practice</span>
+<span class="n">file_name</span> <span class="o">=</span> <span class="s2">&quot;example_output_series.csv&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span>
+    <span class="n">file_name</span><span class="p">,</span>
+    <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;&lt;U7&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+    <span class="n">skip_header</span><span class="o">=</span><span class="mi">1</span>
+<span class="p">)</span>
 
-<span class="c1"># define observations</span>
-<span class="c1"># randomly select a number of observations from the output series</span>
-<span class="n">n_obs</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">obs_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">timesteps</span><span class="p">),</span> <span class="n">n_obs</span><span class="p">)</span>
-<span class="c1"># select the corresponding timesteps and values</span>
-<span class="n">obs_timesteps</span> <span class="o">=</span> <span class="n">timesteps</span><span class="p">[</span><span class="n">obs_idx</span><span class="p">]</span>
-<span class="n">obs_values</span> <span class="o">=</span> <span class="n">output_series</span><span class="p">[</span><span class="n">obs_idx</span><span class="p">]</span>
-<span class="c1"># add some noise to the observations (observation error)</span>
-<span class="n">obs_values</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">)</span>
-
-<span class="c1"># make series we can later use in the model (has to be the same length as</span>
-<span class="c1"># the input series, filled with NaN-values where we do not have any</span>
-<span class="c1"># observations)</span>
-<span class="n">obs_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">input_series</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-<span class="n">obs_series</span><span class="p">[</span><span class="n">obs_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs_values</span>
+<span class="n">timestamps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="sa">r</span><span class="s2">&quot;%Y-%m&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+<span class="n">output_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -371,6 +341,9 @@
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">### plot input series, output series, and observations</span>
 
+<span class="c1"># get observation timesteps</span>
+<span class="n">timesteps</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="n">t</span><span class="o">.</span><span class="n">month</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">timestamps</span><span class="p">]</span>
+
 <span class="c1"># create figure</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="c1"># plot input series</span>
@@ -384,13 +357,13 @@
 <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
     <span class="n">timesteps</span><span class="p">,</span>
     <span class="n">output_series</span><span class="p">,</span>
-    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tracer Input&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tracer Output&quot;</span><span class="p">,</span>
     <span class="n">c</span><span class="o">=</span><span class="s2">&quot;green&quot;</span>
 <span class="p">)</span>
 <span class="c1"># plot observations</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
-    <span class="n">obs_timesteps</span><span class="p">,</span>
-    <span class="n">obs_values</span><span class="p">,</span>
+    <span class="n">timesteps</span><span class="p">,</span>
+    <span class="n">obs_series</span><span class="p">,</span>
     <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Observations&quot;</span><span class="p">,</span>
     <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span>
     <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
@@ -404,71 +377,98 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/cf5a2cd19f8cc4d276e3d918b70820168ace0e0ac79e3052718fc43d7b53274e.png" src="../_images/cf5a2cd19f8cc4d276e3d918b70820168ace0e0ac79e3052718fc43d7b53274e.png" />
+<img alt="../_images/0f7b6febfcc4c3ed15101f18df34df6f9dedd0b1913cdcd14852a786f3be188a.png" src="../_images/0f7b6febfcc4c3ed15101f18df34df6f9dedd0b1913cdcd14852a786f3be188a.png" />
 </div>
 </div>
 </section>
-<section id="calibrate-model">
-<h2>2. Calibrate Model<a class="headerlink" href="#calibrate-model" title="Link to this heading">¶</a></h2>
+<section id="calibrate-model-parameters">
+<h2>2. Calibrate Model Parameters<a class="headerlink" href="#calibrate-model-parameters" title="Link to this heading">¶</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">### define model (use the same structure / units as the true model)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t_half</span> <span class="o">=</span> <span class="mf">12.3</span> <span class="o">*</span> <span class="mf">12.0</span>
+<span class="n">lambda_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">t_half</span>
+
+<span class="c1">### define model (use the same structure / units as the true model)</span>
 <span class="c1"># time step is 1 month</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">ism</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">ism</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">dt</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
     <span class="n">lambda_</span><span class="o">=</span><span class="n">lambda_</span><span class="p">,</span>
     <span class="n">input_series</span><span class="o">=</span><span class="n">input_series</span><span class="p">,</span>
-    <span class="n">target_series</span><span class="o">=</span><span class="n">obs_series</span><span class="p">,</span> <span class="c1"># now we have a target series</span>
-    <span class="n">steady_state_input</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+    <span class="n">target_series</span><span class="o">=</span><span class="n">obs_series</span><span class="p">,</span>
+    <span class="n">steady_state_input</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="c1"># this is the true value</span>
     <span class="n">n_warmup_half_lives</span><span class="o">=</span><span class="mi">10</span>
 <span class="p">)</span>
 
 <span class="c1"># add an exponential-piston-flow unit</span>
 <span class="c1"># define the initial model parameters for inference</span>
-<span class="n">mtt_init</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">*</span> <span class="mi">10</span> <span class="c1"># 17 years</span>
-<span class="n">eta_init</span> <span class="o">=</span> <span class="mf">1.1</span>
+<span class="n">epm_mtt_init</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">*</span> <span class="mi">1</span> <span class="c1"># 1 year</span>
+<span class="n">epm_eta_init</span> <span class="o">=</span> <span class="mf">1.1</span>
 <span class="n">m</span><span class="o">.</span><span class="n">add_unit</span><span class="p">(</span>
-    <span class="n">ism</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">EPMUnit</span><span class="p">(</span><span class="n">mtt</span><span class="o">=</span><span class="n">mtt_init</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="n">eta_init</span><span class="p">),</span>
-    <span class="n">fraction</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
-    <span class="n">bounds</span><span class="o">=</span><span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="mf">45.</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)],</span>
+    <span class="n">ism</span><span class="o">.</span><span class="n">EPMUnit</span><span class="p">(</span><span class="n">mtt</span><span class="o">=</span><span class="n">epm_mtt_init</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="n">epm_eta_init</span><span class="p">),</span>
+    <span class="n">fraction</span><span class="o">=</span><span class="mf">.8</span><span class="p">,</span> <span class="c1"># 80 percent of the overall response; is the true value</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="mf">50.</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)],</span>
     <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;epm&quot;</span>
 <span class="p">)</span>
 
-<span class="c1"># create a solver</span>
-<span class="n">solver</span> <span class="o">=</span> <span class="n">ism</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
-<span class="c1"># run solver</span>
-<span class="n">sol</span><span class="p">,</span> <span class="n">sim</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">popsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="c1"># add a piston-flow unit</span>
+<span class="c1"># define the true model parameters</span>
+<span class="n">pm_mtt_init</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">*</span> <span class="mi">1</span> <span class="c1"># 1 year</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add_unit</span><span class="p">(</span>
+    <span class="n">ism</span><span class="o">.</span><span class="n">PMUnit</span><span class="p">(</span><span class="n">mtt</span><span class="o">=</span><span class="n">pm_mtt_init</span><span class="p">),</span>
+    <span class="n">fraction</span><span class="o">=</span><span class="mf">.2</span><span class="p">,</span> <span class="c1"># 20 percent of the overall response, is the true value</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="mf">50.</span><span class="p">)],</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;pm&quot;</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">### analyze calibration results</span>
-<span class="c1"># print optimized parameters</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;True parameters:&quot;</span><span class="p">,</span>
-      <span class="p">[</span><span class="n">true_params</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">true_params</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calibrated parameters:&quot;</span><span class="p">,</span>
-      <span class="p">[</span><span class="n">sol</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">sol</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a solver</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">ism</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="c1"># run DE</span>
+<span class="n">sol</span><span class="p">,</span> <span class="n">sim</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">differential_evolution</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">popsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># define true parameters</span>
+<span class="n">epm_mtt_true</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">*</span> <span class="mi">40</span> <span class="c1"># 40 years</span>
+<span class="n">epm_eta_true</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">pm_mtt_true</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">*</span> <span class="mi">5</span> <span class="c1"># 5 years (faster than EPM)</span>
 
-<span class="c1">### plot input series, true output series, observations, and´</span>
+<span class="c1"># print solution</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;EPM MTT (true):&quot;</span><span class="p">,</span> <span class="n">epm_mtt_true</span><span class="p">,</span> <span class="s2">&quot;EPM MTT (cal):&quot;</span><span class="p">,</span> <span class="n">sol</span><span class="p">[</span><span class="s2">&quot;epm.mtt&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;EPM Eta (true):&quot;</span><span class="p">,</span> <span class="n">epm_eta_true</span><span class="p">,</span> <span class="s2">&quot;EPM Eta (cal):&quot;</span><span class="p">,</span> <span class="n">sol</span><span class="p">[</span><span class="s2">&quot;epm.eta&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PM MTT (true):&quot;</span><span class="p">,</span> <span class="n">pm_mtt_true</span><span class="p">,</span> <span class="s2">&quot;PM MTT (cal):&quot;</span><span class="p">,</span> <span class="n">sol</span><span class="p">[</span><span class="s2">&quot;pm.mtt&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>EPM MTT (true): 480 EPM MTT (cal): 481.8128258316174
+EPM Eta (true): 1.5 EPM Eta (cal): 1.4974000809086792
+PM MTT (true): 60 PM MTT (cal): 60.481218915834596
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">### plot input series, true output series, observations, and´</span>
 <span class="c1"># calibrated output</span>
 
 <span class="c1"># create figure</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="c1"># plot input series</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">timesteps</span><span class="p">,</span>
-    <span class="n">input_series</span><span class="p">,</span>
-    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tracer Input&quot;</span><span class="p">,</span>
-    <span class="n">c</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span>
-<span class="p">)</span>
 <span class="c1"># plot output series</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
     <span class="n">timesteps</span><span class="p">,</span>
     <span class="n">output_series</span><span class="p">,</span>
-    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tracer Input&quot;</span><span class="p">,</span>
-    <span class="n">c</span><span class="o">=</span><span class="s2">&quot;green&quot;</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tracer Output&quot;</span><span class="p">,</span>
+    <span class="n">c</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span>
 <span class="p">)</span>
 <span class="c1"># plot calibrated results</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
@@ -476,16 +476,18 @@
     <span class="n">sim</span><span class="p">,</span>
     <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Calibration&quot;</span><span class="p">,</span>
     <span class="n">c</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
     <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span>
 <span class="p">)</span>
+
 <span class="c1"># plot observations</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
-    <span class="n">obs_timesteps</span><span class="p">,</span>
-    <span class="n">obs_values</span><span class="p">,</span>
+    <span class="n">timesteps</span><span class="p">,</span>
+    <span class="n">obs_series</span><span class="p">,</span>
     <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Observations&quot;</span><span class="p">,</span>
     <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span>
     <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
-    <span class="n">zorder</span><span class="o">=</span><span class="mi">10</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">100000000</span>
 <span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time [months]&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Tracer concentration [-]&quot;</span><span class="p">)</span>
@@ -495,11 +497,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>True parameters: [204.0, 1.5]
-Calibrated parameters: [204.36143614778004, 1.5439652738495657]
-</pre></div>
-</div>
-<img alt="../_images/2b617c027fda3104b2e3cc463ad2d550d57ca03c2cae18de5ae16ea6c8cf5d5e.png" src="../_images/2b617c027fda3104b2e3cc463ad2d550d57ca03c2cae18de5ae16ea6c8cf5d5e.png" />
+<img alt="../_images/b94a2b35fdd81a4a16ceebe05028d4a3fe8ab973ed1f1f1a793b6f660ebf0cd3.png" src="../_images/b94a2b35fdd81a4a16ceebe05028d4a3fe8ab973ed1f1f1a793b6f660ebf0cd3.png" />
 </div>
 </div>
 </section>
@@ -510,12 +508,12 @@ Calibrated parameters: [204.36143614778004, 1.5439652738495657]
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../api/modules.html">
+          <a class="next-page" href="example_02.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">ISOSIMpy</div>
+                <div class="title">Modelling in the Bayesian Statistical Framework</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -560,9 +558,9 @@ Calibrated parameters: [204.36143614778004, 1.5439652738495657]
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">A Basic Model</a><ul>
-<li><a class="reference internal" href="#generate-synthetic-observation-data">1. Generate Synthetic Observation Data</a></li>
-<li><a class="reference internal" href="#calibrate-model">2. Calibrate Model</a></li>
+<li><a class="reference internal" href="#">Basic Modelling with ISOSIMpy</a><ul>
+<li><a class="reference internal" href="#load-synthetic-observation-data">1. Load (Synthetic) Observation Data</a></li>
+<li><a class="reference internal" href="#calibrate-model-parameters">2. Calibrate Model Parameters</a></li>
 </ul>
 </li>
 </ul>
