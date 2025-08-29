@@ -1,7 +1,0 @@
-ISOSIMpy.app module
-===================
-
-.. automodule:: ISOSIMpy.app
-   :members:
-   :show-inheritance:
-   :undoc-members:

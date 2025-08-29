@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="ISOSIMpy.app module" href="ISOSIMpy.app.html" /><link rel="prev" title="ISOSIMpy.model.solver module" href="ISOSIMpy.model.solver.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="ISOSIMpy.model.solver module" href="ISOSIMpy.model.solver.html" />
         <link rel="prefetch" href="../_static/logo.png" as="image" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
@@ -221,13 +221,20 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">ISOSIMpy</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of ISOSIMpy</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="ISOSIMpy.html">ISOSIMpy package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of ISOSIMpy package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3 current has-children"><a class="reference internal" href="ISOSIMpy.model.html">ISOSIMpy.model package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of ISOSIMpy.model package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="ISOSIMpy.gui.html">ISOSIMpy.gui package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of ISOSIMpy.gui package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ISOSIMpy.gui.app.html">ISOSIMpy.gui.app module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ISOSIMpy.gui.controller.html">ISOSIMpy.gui.controller module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ISOSIMpy.gui.main_window.html">ISOSIMpy.gui.main_window module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ISOSIMpy.gui.state.html">ISOSIMpy.gui.state module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="ISOSIMpy.model.html">ISOSIMpy.model package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of ISOSIMpy.model package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="ISOSIMpy.model.model.html">ISOSIMpy.model.model module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ISOSIMpy.model.registry.html">ISOSIMpy.model.registry module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ISOSIMpy.model.solver.html">ISOSIMpy.model.solver module</a></li>
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ISOSIMpy.model.units module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="ISOSIMpy.app.html">ISOSIMpy.app module</a></li>
 </ul>
 </li>
 </ul>
@@ -281,9 +288,23 @@
 <p>Exponential Model (EM) unit.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>mtt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Mean travel time.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mtt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Mean travel time.</p></li>
+<li><p><strong>PREFIX</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Prefix for local parameter names. Helper for GUI.</p></li>
+<li><p><strong>PARAMS</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – List of (default) parameter definitions. Helper for GUI.</p></li>
+</ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.units.EMUnit.PARAMS">
+<span class="sig-name descname"><span class="pre">PARAMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[{'bounds':</span> <span class="pre">(0.0,</span> <span class="pre">10000.0),</span> <span class="pre">'default':</span> <span class="pre">120.0,</span> <span class="pre">'key':</span> <span class="pre">'mtt',</span> <span class="pre">'label':</span> <span class="pre">'Mean</span> <span class="pre">Transit</span> <span class="pre">Time'}]</span></em><a class="headerlink" href="#ISOSIMpy.model.units.EMUnit.PARAMS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.units.EMUnit.PREFIX">
+<span class="sig-name descname"><span class="pre">PREFIX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'em'</span></em><a class="headerlink" href="#ISOSIMpy.model.units.EMUnit.PREFIX" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="ISOSIMpy.model.units.EMUnit.get_impulse_response">
 <span class="sig-name descname"><span class="pre">get_impulse_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">numpy.ndarray</span></a></span></span><a class="reference internal" href="../_modules/ISOSIMpy/model/units.html#EMUnit.get_impulse_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.units.EMUnit.get_impulse_response" title="Link to this definition">¶</a></dt>
@@ -352,9 +373,21 @@ are ignored.</p>
 <li><p><strong>mtt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Mean travel time.</p></li>
 <li><p><strong>eta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Ratio of total volume to the exponential reservoir (&gt;= 1). <code class="docutils literal notranslate"><span class="pre">eta=1</span></code>
 reduces to a pure exponential model; <code class="docutils literal notranslate"><span class="pre">eta&gt;1</span></code> adds a piston component.</p></li>
+<li><p><strong>PREFIX</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Prefix for local parameter names. Helper for GUI.</p></li>
+<li><p><strong>PARAMS</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – List of (default) parameter definitions. Helper for GUI.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.units.EPMUnit.PARAMS">
+<span class="sig-name descname"><span class="pre">PARAMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[{'bounds':</span> <span class="pre">(0.0,</span> <span class="pre">10000.0),</span> <span class="pre">'default':</span> <span class="pre">120.0,</span> <span class="pre">'key':</span> <span class="pre">'mtt',</span> <span class="pre">'label':</span> <span class="pre">'Mean</span> <span class="pre">Transit</span> <span class="pre">Time'},</span> <span class="pre">{'bounds':</span> <span class="pre">(1.0,</span> <span class="pre">2.0),</span> <span class="pre">'default':</span> <span class="pre">1.1,</span> <span class="pre">'key':</span> <span class="pre">'eta',</span> <span class="pre">'label':</span> <span class="pre">'Eta'}]</span></em><a class="headerlink" href="#ISOSIMpy.model.units.EPMUnit.PARAMS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.units.EPMUnit.PREFIX">
+<span class="sig-name descname"><span class="pre">PREFIX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'epm'</span></em><a class="headerlink" href="#ISOSIMpy.model.units.EPMUnit.PREFIX" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ISOSIMpy.model.units.EPMUnit.eta">
 <span class="sig-name descname"><span class="pre">eta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#ISOSIMpy.model.units.EPMUnit.eta" title="Link to this definition">¶</a></dt>
@@ -425,9 +458,23 @@ are ignored.</p>
 <p>Piston-Flow Model (discrete delta at the mean travel time) with decay.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>mtt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Mean travel time where all mass is transported as a plug flow.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mtt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Mean travel time where all mass is transported as a plug flow.</p></li>
+<li><p><strong>PREFIX</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Prefix for local parameter names. Helper for GUI.</p></li>
+<li><p><strong>PARAMS</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – List of (default) parameter definitions. Helper for GUI.</p></li>
+</ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.units.PMUnit.PARAMS">
+<span class="sig-name descname"><span class="pre">PARAMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[{'bounds':</span> <span class="pre">(0.0,</span> <span class="pre">10000.0),</span> <span class="pre">'default':</span> <span class="pre">120.0,</span> <span class="pre">'key':</span> <span class="pre">'mtt',</span> <span class="pre">'label':</span> <span class="pre">'Mean</span> <span class="pre">Transit</span> <span class="pre">Time'}]</span></em><a class="headerlink" href="#ISOSIMpy.model.units.PMUnit.PARAMS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ISOSIMpy.model.units.PMUnit.PREFIX">
+<span class="sig-name descname"><span class="pre">PREFIX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pm'</span></em><a class="headerlink" href="#ISOSIMpy.model.units.PMUnit.PREFIX" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="ISOSIMpy.model.units.PMUnit.get_impulse_response">
 <span class="sig-name descname"><span class="pre">get_impulse_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">numpy.ndarray</span></a></span></span><a class="reference internal" href="../_modules/ISOSIMpy/model/units.html#PMUnit.get_impulse_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ISOSIMpy.model.units.PMUnit.get_impulse_response" title="Link to this definition">¶</a></dt>
@@ -555,15 +602,7 @@ are ignored.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="ISOSIMpy.app.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">ISOSIMpy.app module</div>
-              </div>
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-            </a>
+          
           <a class="prev-page" href="ISOSIMpy.model.solver.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
@@ -607,6 +646,8 @@ are ignored.</p>
             <ul>
 <li><a class="reference internal" href="#">ISOSIMpy.model.units module</a><ul>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.EMUnit"><code class="docutils literal notranslate"><span class="pre">EMUnit</span></code></a><ul>
+<li><a class="reference internal" href="#ISOSIMpy.model.units.EMUnit.PARAMS"><code class="docutils literal notranslate"><span class="pre">EMUnit.PARAMS</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.units.EMUnit.PREFIX"><code class="docutils literal notranslate"><span class="pre">EMUnit.PREFIX</span></code></a></li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.EMUnit.get_impulse_response"><code class="docutils literal notranslate"><span class="pre">EMUnit.get_impulse_response()</span></code></a></li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.EMUnit.mtt"><code class="docutils literal notranslate"><span class="pre">EMUnit.mtt</span></code></a></li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.EMUnit.param_values"><code class="docutils literal notranslate"><span class="pre">EMUnit.param_values()</span></code></a></li>
@@ -614,6 +655,8 @@ are ignored.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.EPMUnit"><code class="docutils literal notranslate"><span class="pre">EPMUnit</span></code></a><ul>
+<li><a class="reference internal" href="#ISOSIMpy.model.units.EPMUnit.PARAMS"><code class="docutils literal notranslate"><span class="pre">EPMUnit.PARAMS</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.units.EPMUnit.PREFIX"><code class="docutils literal notranslate"><span class="pre">EPMUnit.PREFIX</span></code></a></li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.EPMUnit.eta"><code class="docutils literal notranslate"><span class="pre">EPMUnit.eta</span></code></a></li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.EPMUnit.get_impulse_response"><code class="docutils literal notranslate"><span class="pre">EPMUnit.get_impulse_response()</span></code></a></li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.EPMUnit.mtt"><code class="docutils literal notranslate"><span class="pre">EPMUnit.mtt</span></code></a></li>
@@ -622,6 +665,8 @@ are ignored.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.PMUnit"><code class="docutils literal notranslate"><span class="pre">PMUnit</span></code></a><ul>
+<li><a class="reference internal" href="#ISOSIMpy.model.units.PMUnit.PARAMS"><code class="docutils literal notranslate"><span class="pre">PMUnit.PARAMS</span></code></a></li>
+<li><a class="reference internal" href="#ISOSIMpy.model.units.PMUnit.PREFIX"><code class="docutils literal notranslate"><span class="pre">PMUnit.PREFIX</span></code></a></li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.PMUnit.get_impulse_response"><code class="docutils literal notranslate"><span class="pre">PMUnit.get_impulse_response()</span></code></a></li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.PMUnit.mtt"><code class="docutils literal notranslate"><span class="pre">PMUnit.mtt</span></code></a></li>
 <li><a class="reference internal" href="#ISOSIMpy.model.units.PMUnit.param_values"><code class="docutils literal notranslate"><span class="pre">PMUnit.param_values()</span></code></a></li>

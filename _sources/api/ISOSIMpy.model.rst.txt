@@ -8,6 +8,7 @@ Submodules
    :maxdepth: 4
 
    ISOSIMpy.model.model
+   ISOSIMpy.model.registry
    ISOSIMpy.model.solver
    ISOSIMpy.model.units
 

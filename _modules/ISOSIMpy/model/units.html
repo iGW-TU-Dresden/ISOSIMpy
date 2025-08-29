@@ -220,13 +220,20 @@
 <ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/modules.html">ISOSIMpy</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of ISOSIMpy</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/ISOSIMpy.html">ISOSIMpy package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of ISOSIMpy package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/ISOSIMpy.model.html">ISOSIMpy.model package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of ISOSIMpy.model package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/ISOSIMpy.gui.html">ISOSIMpy.gui package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of ISOSIMpy.gui package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.gui.app.html">ISOSIMpy.gui.app module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.gui.controller.html">ISOSIMpy.gui.controller module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.gui.main_window.html">ISOSIMpy.gui.main_window module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.gui.state.html">ISOSIMpy.gui.state module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/ISOSIMpy.model.html">ISOSIMpy.model package</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of ISOSIMpy.model package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.model.model.html">ISOSIMpy.model.model module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.model.registry.html">ISOSIMpy.model.registry module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.model.solver.html">ISOSIMpy.model.solver module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ISOSIMpy.model.units.html">ISOSIMpy.model.units module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api/ISOSIMpy.app.html">ISOSIMpy.app module</a></li>
 </ul>
 </li>
 </ul>
@@ -359,10 +366,19 @@
 <span class="sd">    eta : float</span>
 <span class="sd">        Ratio of total volume to the exponential reservoir (&gt;= 1). ``eta=1``</span>
 <span class="sd">        reduces to a pure exponential model; ``eta&gt;1`` adds a piston component.</span>
+<span class="sd">    PREFIX : str</span>
+<span class="sd">        Prefix for local parameter names. Helper for GUI.</span>
+<span class="sd">    PARAMS : List[Dict[str, Any]]</span>
+<span class="sd">        List of (default) parameter definitions. Helper for GUI.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">mtt</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">eta</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">PREFIX</span> <span class="o">=</span> <span class="s2">&quot;epm&quot;</span>
+    <span class="n">PARAMS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;mtt&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Mean Transit Time&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">120.0</span><span class="p">,</span> <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10000.0</span><span class="p">)},</span>
+        <span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;eta&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Eta&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">,</span> <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)},</span>
+    <span class="p">]</span>
 
 <div class="viewcode-block" id="EPMUnit.param_values">
 <a class="viewcode-back" href="../../../api/ISOSIMpy.model.units.html#ISOSIMpy.model.EPMUnit.param_values">[docs]</a>
@@ -443,9 +459,17 @@
 <span class="sd">    ----------</span>
 <span class="sd">    mtt : float</span>
 <span class="sd">        Mean travel time.</span>
+<span class="sd">    PREFIX : str</span>
+<span class="sd">        Prefix for local parameter names. Helper for GUI.</span>
+<span class="sd">    PARAMS : List[Dict[str, Any]]</span>
+<span class="sd">        List of (default) parameter definitions. Helper for GUI.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">mtt</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">PREFIX</span> <span class="o">=</span> <span class="s2">&quot;em&quot;</span>
+    <span class="n">PARAMS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;mtt&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Mean Transit Time&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">120.0</span><span class="p">,</span> <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10000.0</span><span class="p">)},</span>
+    <span class="p">]</span>
 
 <div class="viewcode-block" id="EMUnit.param_values">
 <a class="viewcode-back" href="../../../api/ISOSIMpy.model.units.html#ISOSIMpy.model.EMUnit.param_values">[docs]</a>
@@ -521,9 +545,17 @@
 <span class="sd">    ----------</span>
 <span class="sd">    mtt : float</span>
 <span class="sd">        Mean travel time where all mass is transported as a plug flow.</span>
+<span class="sd">    PREFIX : str</span>
+<span class="sd">        Prefix for local parameter names. Helper for GUI.</span>
+<span class="sd">    PARAMS : List[Dict[str, Any]]</span>
+<span class="sd">        List of (default) parameter definitions. Helper for GUI.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">mtt</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">PREFIX</span> <span class="o">=</span> <span class="s2">&quot;pm&quot;</span>
+    <span class="n">PARAMS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;mtt&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Mean Transit Time&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">120.0</span><span class="p">,</span> <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10000.0</span><span class="p">)},</span>
+    <span class="p">]</span>
 
 <div class="viewcode-block" id="PMUnit.param_values">
 <a class="viewcode-back" href="../../../api/ISOSIMpy.model.units.html#ISOSIMpy.model.PMUnit.param_values">[docs]</a>
