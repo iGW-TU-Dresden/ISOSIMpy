@@ -1,0 +1,22 @@
+Model Report
+====================
+
+Model settings
+--------------
+Time step (dt):          1 month
+Decay constant (lambda): 0.004683698296836982
+Warmup steps:            1470 (auto)
+Units count:             2
+
+Global fit
+----------
+MSE: 5.69937e-05
+
+Parameters by unit
+------------------
+[epm] fraction=0.200
+  epm.eta         value=1.49383, initial=1.1, bounds=(1, 2), fixed=False
+  epm.mtt         value=484.029, initial=120, bounds=(0, 10000), fixed=False
+
+[pm] fraction=0.800
+  pm.mtt          value=60.4996, initial=120, bounds=(0, 10000), fixed=False

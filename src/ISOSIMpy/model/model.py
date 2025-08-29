@@ -268,7 +268,7 @@ class Model:
 
     def write_report(
         self,
-        filepath: str,
+        filename: str,
         frequency: str,
         sim: Optional[np.ndarray] = None,
         title: str = "Model Report",
@@ -280,7 +280,7 @@ class Model:
 
         Parameters
         ----------
-        filepath : str
+        filename : str
             Path of the text file to write.
         frequency : str
             Simulation frequency (e.g., ``"1h"``). This is not checked
@@ -299,7 +299,7 @@ class Model:
         Returns
         -------
         str
-            The full report text that was written to `filepath`.
+            The full report text that was written to `filename`.
 
         Notes
         -----
@@ -371,6 +371,6 @@ class Model:
             lines.append("")
 
         report_text = "\n".join(lines)
-        with open(filepath, "w", encoding="utf-8") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(report_text)
         return report_text

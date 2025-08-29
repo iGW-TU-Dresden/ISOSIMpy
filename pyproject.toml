@@ -34,11 +34,11 @@ Documentation = "https://iGW-TU-Dresden.github.io/ISOSIMpy/"
 
 [project.scripts]
 # console entry (shows console on Windows)
-ISOSIMpy = "ISOSIMpy.app:main"
+ISOSIMpy = "ISOSIMpy.gui.app:main"
 
 [project.gui-scripts]
 # GUI entry (no console on Windows)
-ISOSIMpy-gui = "ISOSIMpy.app:main"
+ISOSIMpy-gui = "ISOSIMpy.gui.app:main"
 
 [project.optional-dependencies]
 dev = [

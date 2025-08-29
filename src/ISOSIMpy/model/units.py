@@ -77,10 +77,19 @@ class EPMUnit(Unit):
     eta : float
         Ratio of total volume to the exponential reservoir (>= 1). ``eta=1``
         reduces to a pure exponential model; ``eta>1`` adds a piston component.
+    PREFIX : str
+        Prefix for local parameter names. Helper for GUI.
+    PARAMS : List[Dict[str, Any]]
+        List of (default) parameter definitions. Helper for GUI.
     """
 
     mtt: float
     eta: float
+    PREFIX = "epm"
+    PARAMS = [
+        {"key": "mtt", "label": "Mean Transit Time", "default": 120.0, "bounds": (0.0, 10000.0)},
+        {"key": "eta", "label": "Eta", "default": 1.1, "bounds": (1.0, 2.0)},
+    ]
 
     def param_values(self) -> Dict[str, float]:
         """Get parameter values.
@@ -149,9 +158,17 @@ class EMUnit(Unit):
     ----------
     mtt : float
         Mean travel time.
+    PREFIX : str
+        Prefix for local parameter names. Helper for GUI.
+    PARAMS : List[Dict[str, Any]]
+        List of (default) parameter definitions. Helper for GUI.
     """
 
     mtt: float
+    PREFIX = "em"
+    PARAMS = [
+        {"key": "mtt", "label": "Mean Transit Time", "default": 120.0, "bounds": (0.0, 10000.0)},
+    ]
 
     def param_values(self) -> Dict[str, float]:
         """Get parameter values.
@@ -215,9 +232,17 @@ class PMUnit(Unit):
     ----------
     mtt : float
         Mean travel time where all mass is transported as a plug flow.
+    PREFIX : str
+        Prefix for local parameter names. Helper for GUI.
+    PARAMS : List[Dict[str, Any]]
+        List of (default) parameter definitions. Helper for GUI.
     """
 
     mtt: float
+    PREFIX = "pm"
+    PARAMS = [
+        {"key": "mtt", "label": "Mean Transit Time", "default": 120.0, "bounds": (0.0, 10000.0)},
+    ]
 
     def param_values(self) -> Dict[str, float]:
         """Get parameter values.
