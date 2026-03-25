@@ -131,6 +131,15 @@ class ModelDesignTab(QWidget):
         grid.addWidget(hdr_val, row, 1, alignment=Qt.AlignLeft | Qt.AlignVCenter)
         row += 1
 
+        # Steady-state unit notification header
+        hdr_note = QLabel(
+            "Steady-state input units must match units of tracer input and"
+            + " observations (e.g., [TU])!"
+        )
+        hdr_note.setStyleSheet("color: #C42136;")
+        grid.addWidget(hdr_note, row, 0, alignment=Qt.AlignLeft | Qt.AlignVCenter)
+        row += 1
+
         # Steady-state controls
         self.ss_checkbox = QCheckBox("", self)
         self.ss_checkbox.setChecked(bool(self.state.steady_state_enabled))
