@@ -9,6 +9,7 @@ This section provides information and documentation for users. Here, more detail
 
 usage
 detailed_example
+local_installation
 usage_de
 concepts
 ```
