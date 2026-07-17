@@ -20,8 +20,8 @@ Um Probleme bei der Verwendung der GUI zu vermeiden, führen Sie bitte alle Schr
 In diesem **Tab** werden Datensätze geladen und die grundlegendsten Einstellungen für die anschließende Modellierung vorgenommen.
 - Auswahl der zeitlichen Auflösung (jährliche oder monatliche Daten in Zeitreihen und Modellsimulationen)
 - Auswahl von einem oder zwei Tracern, die in der Analyse berücksichtigt werden sollen ($^3\mathrm{H}$ oder $^14\mathrm{C}$)
-- Auswahl und Laden der Tracer-Eingangszeitreihendatei über den sich öffnenden Dateidialog; Details zur Vorbereitung von Tracer-Eingangszeitreihendateien finden Sie [hier](#preparing-datasets)
-- Auswahl und Laden der Tracer-Beobachtungszeitreihendatei über den sich öffnenden Dateidialog; Details zur Vorbereitung von Tracer-Beobachtungszeitreihendateien finden Sie [hier](#preparing-datasets)
+- Auswahl und Laden der Tracer-Eingangszeitreihendatei über den sich öffnenden Dateidialog; Details zur Vorbereitung von Tracer-Eingangszeitreihendateien finden Sie [hier](#preparing-datasets-de)
+- Auswahl und Laden der Tracer-Beobachtungszeitreihendatei über den sich öffnenden Dateidialog; Details zur Vorbereitung von Tracer-Beobachtungszeitreihendateien finden Sie [hier](#preparing-datasets-de)
 
 ```{important}
 In den Tracer-Eingangsdaten und den Beobachtungsdaten sollten dieselben Einheiten der Tracer-Konzentration verwendet werden. Einheiten werden intern nicht überprüft. **Wenn die Einheiten nicht übereinstimmen, werden unerwünschte und falsche Ergebnisse erzielt!**
@@ -44,7 +44,7 @@ In diesem **Tab** werden die verschiedenen Modellteile ausgewählt, die in die S
 - Angabe, ob ein stationärer Tracer-Eingang berücksichtigt werden soll, der für die Zeit vor dem Beginn der Datensätze gilt
 - Angabe der Warmlauf-Zeitspanne
     - dies stellt den stationären Tracer-Eingang für die Dauer der hier angegebenen Anzahl von Tracer-Halbwertszeiten voran
-    - der Modell-Warmlauf hilft, unerwünschte Unregelmäßigkeiten zu entfernen, die in frühen Phasen von Simulationen auftreten können; weitere Details finden Sie [hier](#model-warmup)
+    - der Modell-Warmlauf hilft, unerwünschte Unregelmäßigkeiten zu entfernen, die in frühen Phasen von Simulationen auftreten können; weitere Details finden Sie [hier](#model-warmup-de)
     - im Fall von zwei Tracern wird **die längere der beiden Halbwertszeiten verwendet**
 
 ```{important}
@@ -85,7 +85,7 @@ Alle Plots, die PyTracerLab erzeugt, können in der Plot-Ansicht interaktiv ange
 
 ![Ein Beispielbericht nach der Parameterinferenz (Kalibrierung); Fall eines Tracers.](report.png)
 
-(preparing-datasets)=
+(preparing-datasets-de)=
 ## Vorbereitung der Datensätze
 Datensätze müssen auf eine bestimmte Weise vorbereitet werden, damit die App die Daten einlesen kann. Dateien müssen stets CSVs sein. Die Tracer-Eingangs- und Beobachtungszeitreihendaten müssen dieselbe Länge haben. Zeitstempel, die in der Tracer-Eingangsreihe vorhanden sind, für die aber keine Beobachtung verfügbar ist, müssen als fehlende Werte markiert werden (siehe unten). Es wird angenommen, dass die Zeitreihen keine Lücken aufweisen und vor der Verwendung in PyTracerLab entsprechend aufbereitet werden.
 
@@ -185,5 +185,5 @@ Unten kann anstelle von „# Date, CTracer“ oder „# Date, CTracer1, CTracer2
 2009, nan, nan
 ```
 
-(model-warmup)=
+(model-warmup-de)=
 ## Modell-Warmlauf
