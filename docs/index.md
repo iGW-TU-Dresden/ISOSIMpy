@@ -32,7 +32,7 @@ PyTracerLab development guide.
 ::::
 
 ```{note}
-Deutschsprachige Versionen ausgewählter Seiten sind verfügbar / German versions of selected pages are available: [Verwendung von PyTracerLab](userguide/usage_de.md) and [Verwendung der GUI: ein detailliertes Beispiel](userguide/detailed_example_de.md).
+Deutschsprachige Versionen ausgewählter Seiten sind verfügbar / German versions of selected pages are available: [Verwendung von PyTracerLab](userguide/usage_de.md) and [Verwendung des GUI: ein detailliertes Beispiel](userguide/detailed_example_de.md).
 ```
 
 This webpage provides the package documentation, user guides, and examples. The package is hosted on [GitHub](https://github.com/iGW-TU-Dresden/PyTracerLab), where you can also find the executable that contains the GUI. The package can also be found on [PyPI](https://pypi.org/project/PyTracerLab/). To install the Python package, simply

@@ -1,9 +1,9 @@
-# Verwendung der GUI: ein detailliertes Beispiel
+# Verwendung des GUI: ein detailliertes Beispiel
 
-Dieses Beispiel demonstriert die Funktionalität der GUI. Wir verwenden bereits vorhandene Daten von Tracer-Eingang und Beobachtungen, die synthetisch erzeugt wurden (siehe (Beispiel 5)[../examples/example_05]), aber genau dieselben Schritte lassen sich mit beliebigen eigenen Daten durchführen. Dieses Beispiel behandelt den Fall zweier Tracer (Tritium und Kr-85). Beobachtungen der Tracer-Konzentrationen im Grundwasser liegen für eine Reihe von Zeitpunkten vor, wobei jeweils beide Tracer-Konzentrationen gemessen wurden. Die GUI kann auch Fälle behandeln, in denen zu bestimmten Zeitpunkten nur einer der beiden Tracer beobachtet wurde. Weitere Informationen finden Sie im [Benutzerhandbuch](usage.md).
+Dieses Beispiel demonstriert die Funktionalität des GUI (Graphical User Interface). Wir verwenden bereits vorhandene Daten von Tracer-Eingang und Beobachtungen, die synthetisch erzeugt wurden (siehe (Beispiel 5)[../examples/example_05]), aber genau dieselben Schritte lassen sich mit beliebigen eigenen Daten durchführen. Dieses Beispiel behandelt den Fall zweier Tracer (Tritium und Kr-85). Beobachtungen der Tracer-Konzentrationen im Grundwasser liegen für eine Reihe von Zeitpunkten vor, wobei jeweils beide Tracer-Konzentrationen gemessen wurden. Das GUI kann auch Fälle behandeln, in denen zu bestimmten Zeitpunkten nur einer der beiden Tracer beobachtet wurde. Weitere Informationen finden Sie im [Benutzerhandbuch](usage.md).
 
 ```{tip}
-Ziehen Sie diese Anleitung zu Rate, wenn Sie auf Probleme mit der GUI stoßen. Der größte Teil der GUI-Funktionalität wird hier behandelt, wodurch die meisten aufkommenden Fragen beantwortet werden sollten.
+Ziehen Sie diese Anleitung zu Rate, wenn Sie auf Probleme mit des GUI stoßen. Der größte Teil der GUI-Funktionalität wird hier behandelt, wodurch die meisten aufkommenden Fragen beantwortet werden sollten.
 ```
 
 ## Daten laden
@@ -15,7 +15,7 @@ Wir verwenden Tritium- und Kr-85-Eingangsdaten (examples/example_input_series_2t
 5. Wählen Sie die Beobachtungsdatei `example_observation_series_2tracer.csv` über den Dateidialog, der sich beim Klick auf die Schaltfläche öffnet.
 
 ```{tip}
-Es ist auch möglich, Beobachtungsdaten manuell in der GUI einzugeben. Wenn Sie diese Funktion nutzen möchten, geben Sie **keine** Beobachtungsdatei vorher an. Dies sollte dann Schritt 5 von zuvor ersetzen.
+Es ist auch möglich, Beobachtungsdaten manuell im GUI einzugeben. Wenn Sie diese Funktion nutzen möchten, geben Sie **keine** Beobachtungsdatei vorher an. Dies sollte dann Schritt 5 von zuvor ersetzen.
 ```
 
 ![Ein Bild des Eingabe-Tabs.](ex01.png)
@@ -29,7 +29,7 @@ In diesem Beispiel gibt es ein bekanntes, wahres Referenzmodell, das in der Prax
 5. Legen Sie die Modell-Warmlaufzeit fest (Standard sind `10` Halbwertszeiten des Tracers mit der höheren Halbwertszeit).
 
 ```{tip}
-Die Verwendung mehrerer paralleler Modelleinheiten ermöglicht die Abbildung komplexerer Aquifer-Szenarien. Betrachten Sie zum Beispiel den Fall, in dem der beprobte Brunnen zwei durch eine Grundwassernichtleiterschicht getrennte Aquifere durchdringt. Das Brunnenwasser ist dann eine Mischung verschiedener Wässer mit unterschiedlichen Grundwasserströmungs- und Laufzeiteigenschaften. Die Verwendung von z. B. zwei parallelen Einheiten ermöglicht eine detailliertere Abbildung solcher Fälle.
+Die Verwendung mehrerer paralleler Modelleinheiten ermöglicht die Abbildung komplexerer Aquifer-Szenarien. Betrachten Sie zum Beispiel den Fall, in dem der beprobte Brunnen zwei durch eine Grundwassernichtleiterschicht getrennte Aquifere durchdringt. Das Brunnenwasser ist dann eine Mischung verschiedener Wässer mit unterschiedlichen Grundwasserströmungs- und Verweilzeiteigenschaften. Die Verwendung von z. B. zwei parallelen Einheiten ermöglicht eine detailliertere Abbildung solcher Fälle.
 ```
 
 ![Ein Bild des Modell-Tabs.](ex02.png)
@@ -46,12 +46,12 @@ Wenn das Exponential Piston Flow Model (EPM) als Modelleinheit ausgewählt ist, 
 ![Ein Bild des Parameter-Tabs.](ex03.png)
 
 ## Eine Simulation durchführen und / oder Modellparameter kalibrieren
-In den meisten Anwendungen ist es notwendig, entweder einfache Simulationen (oder Vorwärtsläufe) mit definierten Parameterwerten durchzuführen oder Modellparameter auf Grundlage verfügbarer Beobachtungsdaten zu kalibrieren. In beiden Fällen ist es typischerweise erforderlich, Modellergebnisse zu plotten, die Laufzeitverteilung zu plotten sowie Ergebnisse und simulierte Daten zu exportieren. Im vorliegenden Fall wird die Modellkalibrierung mit einem `Differential Evolution`-Optimierungsansatz durchgeführt. Im vorliegenden Beispiel führen wir die folgenden Schritte durch:
+In den meisten Anwendungen ist es notwendig, entweder einfache Simulationen (oder Vorwärtsläufe) mit definierten Parameterwerten durchzuführen oder Modellparameter auf Grundlage verfügbarer Beobachtungsdaten zu kalibrieren. In beiden Fällen ist es typischerweise erforderlich, Modellergebnisse zu plotten, die Verweilzeitverteilung zu plotten sowie Ergebnisse und simulierte Daten zu exportieren. Im vorliegenden Fall wird die Modellkalibrierung mit einem `Differential Evolution`-Optimierungsansatz durchgeführt. Im vorliegenden Beispiel führen wir die folgenden Schritte durch:
 1. Wählen Sie `Differential Evolution` als Solver.
 2. Bearbeiten Sie gegebenenfalls die Solver-Parameter (in diesem Beispiel werden die Parameter nicht geändert, würden aber bei Bedarf an dieser Stelle geändert).
 3. Führen Sie die Modellkalibrierung aus. Wenn eine einfache Simulation (Vorwärtslauf) durchgeführt werden soll, können die ersten beiden Schritte übersprungen und eine Simulation als erster Schritt ausgeführt werden.
 4. Plotten Sie die Ergebnisse.
-5. Plotten Sie die Laufzeitverteilung.
+5. Plotten Sie die Verweilzeitverteilung.
 6. Erstellen Sie den Modellbericht (speichern Sie die Datei über den Dateidialog an einem bestimmten Ort).
 7. Speichern Sie die Simulationsdaten (speichern Sie die Datei über den Dateidialog an einem bestimmten Ort).
 
@@ -68,10 +68,10 @@ Solver-Parameter sind grundsätzlich auf robuste Standardwerte gesetzt. Sie soll
 ![Ein Beispiel-Plot, der beim Plotten der Ergebnisse erscheint.](ex07.png)
 
 ## Tracer-Tracer-Analyse durchführen
-Um Analysen mit mehreren Tracern durchzuführen, kann der `Tracer-Tracer`-Tab der GUI verwendet werden. Derzeit ist die GUI auf die Analyse von höchstens 2 Tracern parallel beschränkt; diese Beschränkung besteht beim Python-Paket nicht. Nachdem eine Modellstruktur festgelegt wurde (die potenziell mehrere Modelleinheiten umfasst), führt die Tracer-Tracer-Analyse eine Reihe von Modellsimulationen mit unterschiedlichen Werten **eines** mittleren Laufzeitparameters durch – werden mehr als eine Modelleinheit verwendet, muss ein mittlerer Laufzeitparameter angegeben werden, der während der Analyse verändert wird. Im vorliegenden Beispiel wird nur eine Modelleinheit betrachtet, und im Modell existiert nur ein mittlerer Laufzeitparameter. Für die verschiedenen Werte des mittleren Laufzeitparameters (die typischerweise einen bestimmten Bereich abdecken, z. B. 1 bis 50 Jahre) wird das Modell dann simuliert und die resultierende Zeitreihe der simulierten Konzentrationen gespeichert. Im letzten Schritt der Analyse ist es möglich, einen verfügbaren Beobachtungszeitpunkt (aus allen verfügbaren Zeitpunkten, denen ein beobachteter Wert zugeordnet ist) auszuwählen, für den ein Tracer-Tracer-Plot erzeugt werden kann. In diesem Beispiel führen wir die folgenden Schritte durch:
+Um Analysen mit mehreren Tracern durchzuführen, kann der `Tracer-Tracer`-Tab des GUI verwendet werden. Derzeit ist das GUI auf die Analyse von höchstens 2 Tracern parallel beschränkt; diese Beschränkung besteht beim Python-Paket nicht. Nachdem eine Modellstruktur festgelegt wurde (die potenziell mehrere Modelleinheiten umfasst), führt die Tracer-Tracer-Analyse eine Reihe von Modellsimulationen mit unterschiedlichen Werten **eines** mittleren Verweilzeit-Parameters durch – werden mehr als eine Modelleinheit verwendet, muss ein mittlerer Verweilzeit-Parameter angegeben werden, der während der Analyse verändert wird. Im vorliegenden Beispiel wird nur eine Modelleinheit betrachtet, und im Modell existiert nur ein mittlerer Verweilzeit-Parameter. Für die verschiedenen Werte des mittleren Verweilzeit-Parameters (die typischerweise einen bestimmten Bereich abdecken, z. B. 1 bis 50 Jahre) wird das Modell dann simuliert und die resultierende Zeitreihe der simulierten Konzentrationen gespeichert. Im letzten Schritt der Analyse ist es möglich, einen verfügbaren Beobachtungszeitpunkt (aus allen verfügbaren Zeitpunkten, denen ein beobachteter Wert zugeordnet ist) auszuwählen, für den ein Tracer-Tracer-Plot erzeugt werden kann. In diesem Beispiel führen wir die folgenden Schritte durch:
 1. Wählen Sie den `Mean Travel Time Parameter`, der während der Analyse verändert werden soll, aus der Liste.
-2. Legen Sie den Startpunkt und den Endpunkt für die Analyse sowie die Gesamtzahl der während der Analyse zu verwendenden mittleren Laufzeitwerte fest. Dies definiert den „Sweep-Bereich“.
-3. Führen Sie den „Sweep“ der verschiedenen mittleren Laufzeitwerte aus.
+2. Legen Sie den Startpunkt und den Endpunkt für die Analyse sowie die Gesamtzahl der während der Analyse zu verwendenden mittleren Verweilzeit-Parameter fest. Dies definiert den „Sweep-Bereich“.
+3. Führen Sie den „Sweep“ der verschiedenen mittleren Verweilzeit-Parameter aus.
 4. Wählen Sie einen Beobachtungszeitpunkt aus der Liste der verfügbaren Beobachtungszeitpunkte.
 5. Erzeugen Sie den Tracer-Tracer-Plot für diesen Beobachtungszeitpunkt.
 
