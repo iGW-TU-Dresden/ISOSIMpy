@@ -4,6 +4,12 @@ PyTracerLab can be run locally as a Python application — no standalone `.exe` 
 
 The steps below walk you through installing [Anaconda](https://www.anaconda.com/download) as a Python distribution, creating a dedicated environment, and launching the GUI. The whole process takes about 10–15 minutes.
 
+```{tip}
+**On Windows and only interested in the GUI?** The standalone application is quicker — it needs no
+Python at all. See [Get PyTracerLab Running on Your Machine](#get-running) for a
+click-by-click walkthrough.
+```
+
 ---
 
 ## Step 1 — Install Anaconda
